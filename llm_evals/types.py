@@ -1,6 +1,6 @@
-from pydantic import BaseModel
 from typing import Literal
 
+from pydantic import BaseModel
 
 Model = Literal[
     # https://docs.litellm.ai/docs/providers
@@ -20,13 +20,19 @@ Model = Literal[
     # Ollama
     "ollama/llama3.1:8b",
     # Together
+    ## Llama
     "together_ai/meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
     "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
     "together_ai/meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo",
+    "together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+    ## Deepseek
+    "together_ai/deepseek-ai/DeepSeek-V3",
+    ## Qwen
+    "together_ai/Qwen/Qwen2.5-7B-Instruct-Turbo"
+    "together_ai/Qwen/Qwen2.5-72B-Instruct-Turbo",
 ]
 
 
 class Message(BaseModel):
     content: str
     role: Literal["user", "system", "assistant"]
-

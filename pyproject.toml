@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "llm-maths"
+name = "llm-evals"
 version = "0.1.0"
 description = ""
 authors = ["George Prichard <dgmprichard@gmail.com>"]
 readme = "README.md"
-packages = [{ include = "llm_maths" }]
+packages = [{ include = "llm_evals" }]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -28,4 +28,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pyright]
-include = ["llm_maths"]
+include = ["llm_evals"]

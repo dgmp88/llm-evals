@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from peewee import (
-    DateField,
+    DateTimeField,
     FloatField,
     Model,
     TextField,
@@ -9,7 +9,7 @@ from peewee import (
 from playhouse.db_url import connect
 from playhouse.postgres_ext import JSONField
 
-from llm_maths.env import ENV
+from llm_evals.env import ENV
 
 db = connect(ENV.NEON_POSTGRES)
 
@@ -18,7 +18,7 @@ class EvalResult(Model):
     model_name = TextField()
     eval_name = TextField()
     result = FloatField()
-    timestamp = DateField(default=datetime.now)
+    timestamp = DateTimeField(default=datetime.now)
     params = JSONField()
 
     class Meta:
