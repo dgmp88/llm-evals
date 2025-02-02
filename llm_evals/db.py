@@ -19,7 +19,6 @@ class EvalResult(Model):
     eval_name = TextField()
     result = FloatField()
     timestamp = DateTimeField(default=datetime.now)
-    params = JSONField()
 
     class Meta:
         database = db  # This model uses the "people.db" database.
@@ -34,7 +33,17 @@ def test_insert():
     result.save()
 
 
+def read_all():
+    import pandas as pd
+
+    results = [r for r in EvalResult.select().dicts()]
+
+    results = pd.DataFrame(results)
+
+    print(results.to_markdown())
+
+
 if __name__ == "__main__":
     import fire
 
-    fire.Fire({"init_db": init_db, "test_insert": test_insert})
+    fire.Fire({"init_db": init_db, "test_insert": test_insert, "read": read_all})
