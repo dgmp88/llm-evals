@@ -12,10 +12,10 @@ ENV_FILE = PARENT_DIR / ".env"
 class Env(BaseSettings):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_file_encoding="utf-8")
 
-    OPENAI_API_KEY: Optional[str] = Field(description="OpenAI API key")
-    ANTHROPIC_API_KEY: Optional[str] = Field(description="Anthropic API key")
-    GEMINI_API_KEY: Optional[str] = Field(description="Gemini API key")
-    TOGETHERAI_API_KEY: Optional[str] = Field(description="TogetherAI API key")
+    OPENAI_API_KEY: Optional[str] = Field(None, description="OpenAI API key")
+    ANTHROPIC_API_KEY: Optional[str] = Field(None, description="Anthropic API key")
+    GEMINI_API_KEY: Optional[str] = Field(None, description="Gemini API key")
+    TOGETHERAI_API_KEY: Optional[str] = Field(None, description="TogetherAI API key")
     NEON_POSTGRES: str = Field(description="Postgres connection string")
 
 
