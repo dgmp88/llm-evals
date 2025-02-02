@@ -1,9 +1,9 @@
 import numpy as np
 
-from llm_maths.db import EvalResult
-from llm_maths.llm import batch_completion
-from llm_maths.system_prompt import SYSTEM_PROMPT
-from llm_maths.types import Message, Model
+from llm_evals.db import EvalResult
+from llm_evals.llm import batch_completion
+from llm_evals.system_prompt import SYSTEM_PROMPT
+from llm_evals.types import Message, Model
 
 SEED = 0
 
