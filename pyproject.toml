@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "llm-maths"
+version = "0.1.0"
+description = ""
+authors = ["George Prichard <dgmprichard@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "llm_maths" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pydantic = "^2.10.1"
+pydantic-settings = "^2.6.1"
+pytest = "^8.3.3"
+litellm = "^1.52.14"
+pyright = "^1.1.389"
+fire = "^0.7.0"
+google-generativeai = "^0.8.3"
+pandas = "^2.2.3"
+ipykernel = "^6.29.5"
+seaborn = "^0.13.2"
+ollama = "^0.4.1"
+peewee = "^3.17.8"
+psycopg2-binary = "^2.9.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+include = ["llm_maths"]
