@@ -7,13 +7,21 @@ from llm_evals.db import EvalResult
 # Pull in the data
 results = pd.DataFrame([r for r in EvalResult.select().dicts()])
 
+
+def prefix_strip(x):
+    for prefix in ["together_ai/", "meta-llama/", "Qwen/", "gemini/"]:
+        if x.startswith(prefix):
+            x = x[len(prefix) :]
+    return x
+
+
 results = (
     results.groupby(["model_name", "eval_name"])
     .result.mean()
     .sort_values(ascending=False)
     .reset_index()
     .assign(
-        model_name=lambda x: x.model_name.str.replace("together_ai/", ""),
+        model_name=lambda x: x.model_name.map(prefix_strip),
     )
 )
 
@@ -23,13 +31,15 @@ for eval_name, df in results.groupby("eval_name"):
         alt.Chart(df)
         .mark_bar()
         .encode(
-            x=alt.X(
+            x=alt.X("result", title="Score"),
+            y=alt.Y(
                 "model_name",
                 sort=None,
                 title="Model",
-                # axis=alt.Axis(labelAngle=-45)
+                axis=alt.Axis(
+                    labelLimit=200,
+                ),
             ),
-            y=alt.Y("result", title="Score"),
         )
         .properties(title=eval_name),
         use_container_width=True,

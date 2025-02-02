@@ -25,11 +25,17 @@ Model = Literal[
     "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
     "together_ai/meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo",
     "together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+    "togther_ai/meta-llama/Llama-3.2-3B-Instruct-Turbo",
     ## Deepseek
     "together_ai/deepseek-ai/DeepSeek-V3",
     ## Qwen
     "together_ai/Qwen/Qwen2.5-7B-Instruct-Turbo"
     "together_ai/Qwen/Qwen2.5-72B-Instruct-Turbo",
+    ## Google
+    "together_ai/google/gemma-2-9b-it",
+    "together_ai/google/gemma-2-27b-it",
+    ## Mistral
+    "together_ai/mistralai/Mistral-Small-24B-Instruct-2501",
 ]
 
 
