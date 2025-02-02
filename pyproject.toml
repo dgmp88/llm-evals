@@ -21,6 +21,7 @@ seaborn = "^0.13.2"
 ollama = "^0.4.1"
 peewee = "^3.17.8"
 psycopg2-binary = "^2.9.10"
+streamlit = "^1.41.1"
 
 
 [build-system]
