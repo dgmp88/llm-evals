@@ -18,17 +18,19 @@ results = (
 )
 
 
-st.altair_chart(
-    alt.Chart(results)
-    .mark_bar()
-    .encode(
-        x=alt.X(
-            "model_name",
-            sort=None,
-            title="Model",
-            # axis=alt.Axis(labelAngle=-45)
-        ),
-        y=alt.Y("result", title="Score"),
-    ),
-    use_container_width=True,
-)
+for eval_name, df in results.groupby("eval_name"):
+    st.altair_chart(
+        alt.Chart(df)
+        .mark_bar()
+        .encode(
+            x=alt.X(
+                "model_name",
+                sort=None,
+                title="Model",
+                # axis=alt.Axis(labelAngle=-45)
+            ),
+            y=alt.Y("result", title="Score"),
+        )
+        .properties(title=eval_name),
+        use_container_width=True,
+    )
