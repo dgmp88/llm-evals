@@ -1,7 +1,7 @@
 import numpy as np
 
-from llm_evals.core import Assistant, EvalRunner, User
-from llm_evals.types import Model
+from evals.core import Assistant, EvalRunner, User
+from evals.types import Model
 
 SYSTEM_PROMPT = """Answer the math problem with the numeric result only. Round to two decimal places if necessary. Do not add newlines, commas, or any other characters.
 
