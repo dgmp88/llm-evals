@@ -2,7 +2,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from evals.db import EvalResult
+from evals.util.db import EvalResult
 
 # Pull in the data
 results = pd.DataFrame([r for r in EvalResult.select().dicts()])

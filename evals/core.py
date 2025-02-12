@@ -29,9 +29,19 @@ class Assistant(Agent):
         self.model: Model = model
         self.system_message = Message(role="system", content=system_prompt)
 
+    def pre_respond(self, chat_history: list[Message]):
+        # Overloadable hook
+        pass
+
+    def post_respond(self, chat_history: list[Message], response: str):
+        # Overloadable hook
+        pass
+
     def respond(self, chat_history: list[Message]):
+        self.pre_respond(chat_history)
         ch = [self.system_message] + chat_history
         response = completion(self.model, ch)
+        self.post_respond(chat_history, response)
         return response
 
 
@@ -44,21 +54,18 @@ class Eval(ABC):
 
     def __init__(
         self,
-        model: Model,
         assistant: Assistant,
         user: User,
-        user_first: bool,
         max_turns: int = 10,
     ):
-        self.model: Model = model
         self.assistant = assistant
         self.user = user
-        self.user_first = user_first
         self.max_turns = max_turns
         self.chat_history: list[Message] = []
 
     def run(self):
-        current = self.user if self.user_first else self.assistant
+        # User always goes first for compatibility with Gemini, Claude etc.
+        current = self.user
 
         response: None | str = None
 
@@ -75,6 +82,10 @@ class Eval(ABC):
     def evaluate(self) -> float:
         pass
 
+    def print_chat(self):
+        for message in self.chat_history:
+            print(f"{message.role}: {message.content}")
+
 
 def batch_eval(num_runs: int, eval_factory: Callable[[], Eval]):
     np.random.seed(0)
@@ -89,7 +100,7 @@ def batch_eval(num_runs: int, eval_factory: Callable[[], Eval]):
         raise ValueError("No evaluations run")
 
     EvalResult(
-        model_name=eval.model,
+        model_name=eval.assistant.model,
         eval_name=eval.name,
         result=np.mean(results),
     ).save()

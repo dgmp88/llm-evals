@@ -76,10 +76,8 @@ def math(model: Model, low=100, high=1000, num_problems: int = 50):
 
     def eval_factory():
         return MathEval(
-            model=model,
             assistant=MathAssistant(model=model),
             user=MathUser(low=low, high=high),
-            user_first=True,
         )
 
     batch_eval(num_problems, eval_factory)
