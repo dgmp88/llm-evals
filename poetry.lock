@@ -624,6 +624,20 @@ files = [
 ]
 
 [[package]]
+name = "easyai"
+version = "2.0.12"
+description = "Easy-to-use game AI algorithms (Negamax etc. )"
+optional = false
+python-versions = "*"
+files = [
+    {file = "easyAI-2.0.12-py3-none-any.whl", hash = "sha256:9ad5444bdc729b60baa39c60d28dd9c677aaec12e27b7972183859f1a0946ee1"},
+    {file = "easyAI-2.0.12.tar.gz", hash = "sha256:8c4d2d488bcd81578e1b48d38158bc50353dfd4ab3ab04e4ddac637e08378fbe"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "executing"
 version = "2.2.0"
 description = "Get the currently executing AST node of a frame, and other information"
@@ -4011,4 +4025,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "c4831e90bdf8222405fa65bef7557ac0a4139ec3b1d112eca0119f3516872198"
+content-hash = "79e0c3ec4230bb0be6c21d38f976bd85c19f3d0064e81c3a7b69620d82931332"
