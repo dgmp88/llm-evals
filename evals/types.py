@@ -38,7 +38,9 @@ Model = Literal[
     "together_ai/mistralai/Mistral-Small-24B-Instruct-2501",
 ]
 
+Role = Literal["user", "system", "assistant"]
+
 
 class Message(BaseModel):
     content: str
-    role: Literal["user", "system", "assistant"]
+    role: Role

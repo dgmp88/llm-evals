@@ -4,68 +4,92 @@ from typing import Callable
 import numpy as np
 from tqdm import tqdm
 
-from evals.types import Message, Model
+from evals.types import Message, Model, Role
 from evals.util.db import EvalResult
 from evals.util.llm import completion
 
 
 class Agent(ABC):
-    def __init__(self):
-        self.chat_history: list[Message] = []
+    role: Role
 
     @abstractmethod
-    def respond(self, message: str | None = None) -> str:
+    def respond(self, chat_history: list[Message]) -> str:
+        pass
+
+    @abstractmethod
+    def is_done(self) -> bool:
         pass
 
 
 class Assistant(Agent):
+    role = "assistant"
+
     def __init__(self, model: Model, system_prompt: str):
         super().__init__()
         self.model: Model = model
-        self.chat_history.append(Message(role="system", content=system_prompt))
+        self.system_message = Message(role="system", content=system_prompt)
 
-    def respond(self, message=None):
-        if message is None:
-            raise ValueError("message is None")
-        self.chat_history.append(Message(role="user", content=message))
-        response = completion(self.model, self.chat_history)
-        self.chat_history.append(Message(role="assistant", content=response))
+    def respond(self, chat_history: list[Message]):
+        ch = [self.system_message] + chat_history
+        response = completion(self.model, ch)
         return response
 
 
 class User(Agent):
+    role = "user"
+
+
+class Eval(ABC):
+    name: str
+
+    def __init__(
+        self,
+        model: Model,
+        assistant: Assistant,
+        user: User,
+        user_first: bool,
+        max_turns: int = 10,
+    ):
+        self.model: Model = model
+        self.assistant = assistant
+        self.user = user
+        self.user_first = user_first
+        self.max_turns = max_turns
+        self.chat_history: list[Message] = []
+
+    def run(self):
+        current = self.user if self.user_first else self.assistant
+
+        response: None | str = None
+
+        for i in range(self.max_turns):
+            response = current.respond(self.chat_history)
+            self.chat_history.append(Message(role=current.role, content=response))
+            if current.is_done():
+                break
+            current = self.assistant if current == self.user else self.user
+
+        return self.evaluate()
+
     @abstractmethod
-    def evaluate(self, response: str) -> bool:
+    def evaluate(self) -> float:
         pass
 
 
-class EvalRunner(ABC):
-    def __init__(
-        self,
-        name: str,
-        model: Model,
-        assistant_factory: Callable[[Model], Assistant],
-        user_factory: Callable[[Model], User],
-    ):
-        self.name = name
-        self.model: Model = model
-        self.assistant_factory = assistant_factory
-        self.user_factory = user_factory
+def batch_eval(num_runs: int, eval_factory: Callable[[], Eval]):
+    np.random.seed(0)
+    results: list[float] = []
+    eval: Eval | None = None
+    for _ in tqdm(range(num_runs)):
+        eval = eval_factory()
+        score = eval.run()
+        results.append(score)
 
-    def run(self, iterations: int = 50):
-        np.random.seed(0)
-        results = []
-        for i in tqdm(range(0, iterations)):
-            assistant = self.assistant_factory(self.model)
-            user = self.user_factory(self.model)
-            user_response = user.respond()
-            assistant_response = assistant.respond(user_response)
-            result = user.evaluate(assistant_response)
-            results.append(result)
+    if not eval:
+        raise ValueError("No evaluations run")
 
-        percent_correct = sum(results) / iterations
-
-        result = EvalResult(
-            model_name=self.model, eval_name=self.name, result=percent_correct
-        )
-        result.save()
+    EvalResult(
+        model_name=eval.model,
+        eval_name=eval.name,
+        result=np.mean(results),
+    ).save()
