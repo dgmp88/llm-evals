@@ -34,13 +34,13 @@ class MathAssistant(Assistant):
 
 
 class MathUser(User):
-    def __init__(self, low: int, high: int):
+    def __init__(self, rng: np.random.Generator, low: int, high: int):
         super().__init__()
         self.low = low
         self.high = high
 
-        x, y = np.random.randint(low=self.low, high=self.high, size=2)
-        operation = np.random.choice(["+", "-", "*", "/"])
+        x, y = rng.integers(low=self.low, high=self.high, size=2)
+        operation = rng.choice(["+", "-", "*", "/"])
         self.problem = f"{x} {operation} {y}"
 
     def respond(self, chat_history):
@@ -52,6 +52,10 @@ class MathUser(User):
 
 class MathEval(Eval):
     name = "math_eval"
+
+    def __init__(self, model: Model, rng_seed: int):
+        self.assistant = MathAssistant(model=model)
+        self.user = MathUser(rng=self.rng, low=100, high=1000)
 
     def evaluate(self):
         user = cast(MathUser, self.user)
@@ -71,13 +75,13 @@ class MathEval(Eval):
         return correct
 
 
-def math(model: Model, low=100, high=1000, num_problems: int = 50):
+def math(model: Model, num_problems: int = 50):
     """random numbers under 10, addition, subtraction, multiplication, division"""
 
-    def eval_factory():
+    def eval_factory(seed: int):
         return MathEval(
-            assistant=MathAssistant(model=model),
-            user=MathUser(low=low, high=high),
+            model=model,
+            rng_seed=seed,
         )
 
     batch_eval(num_problems, eval_factory)

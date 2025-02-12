@@ -1,11 +1,6 @@
 from datetime import datetime
 
-from peewee import (
-    DateTimeField,
-    FloatField,
-    Model,
-    TextField,
-)
+from peewee import DateTimeField, FloatField, IntegerField, Model, TextField
 from playhouse.db_url import connect
 
 from evals.util.env import ENV
@@ -17,6 +12,7 @@ class EvalResult(Model):
     model_name = TextField()
     eval_name = TextField()
     result = FloatField()
+    runs = IntegerField()
     timestamp = DateTimeField(default=datetime.now)
 
     class Meta:

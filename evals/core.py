@@ -51,16 +51,15 @@ class User(Agent):
 
 class Eval(ABC):
     name: str
+    assistant: Assistant
+    user: User
+    max_turns: int = 10
 
     def __init__(
         self,
-        assistant: Assistant,
-        user: User,
-        max_turns: int = 10,
+        rng_seed: int,
     ):
-        self.assistant = assistant
-        self.user = user
-        self.max_turns = max_turns
+        self.rng = np.random.default_rng(seed=rng_seed)
         self.chat_history: list[Message] = []
 
     def run(self):
@@ -76,7 +75,9 @@ class Eval(ABC):
                 break
             current = self.assistant if current == self.user else self.user
 
-        return self.evaluate()
+        score = self.evaluate()
+        self.print_chat()
+        return score
 
     @abstractmethod
     def evaluate(self) -> float:
@@ -87,12 +88,11 @@ class Eval(ABC):
             print(f"{message.role}: {message.content}")
 
 
-def batch_eval(num_runs: int, eval_factory: Callable[[], Eval]):
-    np.random.seed(0)
+def batch_eval(num_runs: int, eval_factory: Callable[[int], Eval]):
     results: list[float] = []
     eval: Eval | None = None
-    for _ in tqdm(range(num_runs)):
-        eval = eval_factory()
+    for i in tqdm(range(num_runs)):
+        eval = eval_factory(i)
         score = eval.run()
         results.append(score)
 
@@ -103,4 +103,5 @@ def batch_eval(num_runs: int, eval_factory: Callable[[], Eval]):
         model_name=eval.assistant.model,
         eval_name=eval.name,
         result=np.mean(results),
+        runs=len(results),
     ).save()
