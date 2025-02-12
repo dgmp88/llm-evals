@@ -1,7 +1,7 @@
 from litellm import batch_completion as lite_batch_completion
 from litellm import completion as lite_completion  # type: ignore
 
-from llm_evals.types import Message, Model
+from evals.types import Message, Model
 
 DEFAULT_TEMPERATURE = 0.001  # 0 breaks some providers, so just set it super low
 DEFAULT_MAX_TOKENS = 10

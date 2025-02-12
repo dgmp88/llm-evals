@@ -7,9 +7,8 @@ from peewee import (
     TextField,
 )
 from playhouse.db_url import connect
-from playhouse.postgres_ext import JSONField
 
-from llm_evals.env import ENV
+from evals.util.env import ENV
 
 db = connect(ENV.NEON_POSTGRES)
 

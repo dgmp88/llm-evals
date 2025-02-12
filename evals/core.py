@@ -4,9 +4,9 @@ from typing import Callable
 import numpy as np
 from tqdm import tqdm
 
-from llm_evals.db import EvalResult
-from llm_evals.llm import completion
-from llm_evals.types import Message, Model
+from evals.types import Message, Model
+from evals.util.db import EvalResult
+from evals.util.llm import completion
 
 
 class Agent(ABC):

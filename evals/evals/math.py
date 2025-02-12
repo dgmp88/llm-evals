@@ -71,4 +71,4 @@ def math(model: Model, low=100, high=1000, num_problems: int = 50):
 if __name__ == "__main__":
     import fire
 
-    fire.Fire({"math": math})
+    fire.Fire(math)

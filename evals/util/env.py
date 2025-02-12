@@ -4,9 +4,9 @@ from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-PARENT_DIR = Path(__file__).parent.parent
+PACKAGE_DIR = Path(__file__).parents[2]
 
-ENV_FILE = PARENT_DIR / ".env"
+ENV_FILE = PACKAGE_DIR / ".env"
 
 
 class Env(BaseSettings):
