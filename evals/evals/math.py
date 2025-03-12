@@ -55,7 +55,8 @@ class MathEval(Eval):
 
     def __init__(self, model: Model, rng_seed: int):
         self.assistant = MathAssistant(model=model)
-        self.user = MathUser(rng=self.rng, low=100, high=1000)
+        rng = np.random.default_rng(rng_seed)
+        self.user = MathUser(rng=rng, low=100, high=1000)
 
     def evaluate(self):
         user = cast(MathUser, self.user)
