@@ -19,6 +19,7 @@ class Env(BaseSettings):
     NEON_POSTGRES: str = Field(description="Postgres connection string")
 
     DEV: bool = Field(default=False, description="Whether to run in dev mode")
+    PORT: int = Field(default=10000, description="Port to run the server on")
 
 
 ENV = Env()  # type: ignore
