@@ -1,63 +1,59 @@
-import dash
-import pandas as pd
+import numpy as np
 import plotly.express as px
-from dash import dcc, html
-from dash.dependencies import Input, Output
+from fasthtml.common import Div, NotStr, Script, Titled, fast_app, serve
 
-# Initialize the Dash app
-app = dash.Dash(__name__)
+from evals.util.db import read_all
+from evals.util.env import ENV
 
-# Create sample data with multiple categories
-data = {
-    "date": pd.date_range(start="2024-01-01", periods=12, freq="M"),
-    "category": ["A"] * 4 + ["B"] * 4 + ["C"] * 4,
-    "value": [10, 15, 13, 17, 20, 18, 22, 25, 30, 28, 32, 35],
-}
-df = pd.DataFrame(data)
-
-# Define the app layout
-app.layout = html.Div(
-    [
-        html.H1("Interactive Category Selector"),
-        # Dropdown for category selection
-        html.Div(
-            [
-                html.Label("Select Category:"),
-                dcc.Dropdown(
-                    id="category-dropdown",
-                    options=[
-                        {"label": "Category A", "value": "A"},
-                        {"label": "Category B", "value": "B"},
-                        {"label": "Category C", "value": "C"},
-                    ],
-                    value="A",  # Default value
-                    style={"width": "50%", "margin": "20px 0"},
-                ),
-            ]
-        ),
-        # Graph
-        dcc.Graph(id="category-graph"),
-    ]
+app, rt = fast_app(
+    live=ENV.DEV,
+    debug=ENV.DEV,
+    hdrs=(Script(src="https://cdn.plot.ly/plotly-2.32.0.min.js"),),
 )
 
 
-# Callback to update the graph based on dropdown selection
-@app.callback(Output("category-graph", "figure"), Input("category-dropdown", "value"))
-def update_graph(selected_category):
-    # Filter data for selected category
-    filtered_df = df[df["category"] == selected_category]
+@rt("/")
+def get():
+    fig = px.line(x=range(12), y=range(12))
 
-    # Create figure
-    fig = px.line(
-        filtered_df,
-        x="date",
-        y="value",
-        title=f"Values for Category {selected_category}",
-        labels={"value": "Value", "date": "Date"},
+    results = read_all()
+
+    plots = []
+    for eval_name, df in results.groupby("eval_name"):
+        colour = None
+
+        if "tictactoe" in eval_name:
+            print("eval_name", eval_name)
+            # red if <0, green if >0
+            df["colour"] = np.where(df["result"] < 0, "red", "green")
+            colour = "colour"
+        fig = px.bar(
+            df,
+            x="result",
+            y="model_name",
+            color=colour,
+            color_discrete_map={"red": "red", "green": "green"},
+        )
+
+        fig.update_layout(
+            title=eval_name,
+            xaxis_title="Score",
+            yaxis_title=None,
+            # remove legend
+            showlegend=False,
+        )
+
+        if "tictactoe" in eval_name:
+            # Change xlims
+            fig.update_xaxes(range=[-1, 1])
+
+        plots.append(NotStr(fig.to_html(full_html=False, include_plotlyjs=False)))
+
+    return Titled(
+        "LLM Evals",
+        Div(id="myDiv"),
+        *plots,
     )
 
-    return fig
 
-
-if __name__ == "__main__":
-    app.run_server(debug=True)
+serve()

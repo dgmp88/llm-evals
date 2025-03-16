@@ -18,5 +18,7 @@ class Env(BaseSettings):
     TOGETHERAI_API_KEY: Optional[str] = Field(None, description="TogetherAI API key")
     NEON_POSTGRES: str = Field(description="Postgres connection string")
 
+    DEV: bool = Field(default=False, description="Whether to run in dev mode")
+
 
 ENV = Env()  # type: ignore
