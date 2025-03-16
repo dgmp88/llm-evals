@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pydantic = "==2.10.1"
+pydantic-settings = "==2.6.1"
+pandas = "==2.2.3"
+peewee = "==3.17.8"
+psycopg2-binary = "==2.9.10"
+python-fasthtml = "==0.12.4"
+plotly = "*"
+
+[dev-packages]
+pytest = "==8.3.3"
+ipykernel = "==6.29.5"
+tqdm = "==4.67.1"
+litellm = "==1.52.14"
+fire = "==0.7.0"
+google-generativeai = "==0.8.3"
+ollama = "==0.4.1"
+easyai = "==2.0.12"
+
+[requires]
+python_version = "3.12"
