@@ -1,3 +1,4 @@
+import time
 from abc import ABC, abstractmethod
 from typing import Callable
 
@@ -21,6 +22,9 @@ class Agent(ABC):
         pass
 
 
+TIMES = []
+
+
 class Assistant(Agent):
     role = "assistant"
 
@@ -40,7 +44,11 @@ class Assistant(Agent):
     def respond(self, chat_history: list[Message]):
         self.pre_respond(chat_history)
         ch = [self.system_message] + chat_history
+        t1 = time.time()
         response = completion(self.model, ch)
+        print(f"Time taken: {time.time() - t1:.2f}s")
+        TIMES.append(time.time() - t1)
+        print(f"avg time: {np.mean(TIMES)}, max time: {np.max(TIMES)}")
         self.post_respond(chat_history, response)
         return response
 
@@ -93,6 +101,7 @@ def batch_eval(num_runs: int, eval_factory: Callable[[int], Eval]):
     eval: Eval | None = None
     for i in tqdm(range(num_runs)):
         eval = eval_factory(i)
+        print(eval.name)
         score = eval.run()
         results.append(score)
 

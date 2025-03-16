@@ -28,14 +28,31 @@ def test_insert():
     result.save()
 
 
-def read_all():
+def prefix_strip(x):
+    for prefix in ["together_ai/", "meta-llama/", "Qwen/", "gemini/"]:
+        if x.startswith(prefix):
+            x = x[len(prefix) :]
+    return x
+
+
+def read_all(strip_prefix=True):
     import pandas as pd
 
     results = [r for r in EvalResult.select().dicts()]
 
     results = pd.DataFrame(results)
 
-    print(results.to_markdown())
+    results = (
+        results.groupby(["model_name", "eval_name"])
+        .result.mean()
+        .sort_values(ascending=False)
+        .reset_index()
+    )
+
+    if strip_prefix:
+        results["model_name"] = results["model_name"].map(prefix_strip)
+
+    return results
 
 
 if __name__ == "__main__":
