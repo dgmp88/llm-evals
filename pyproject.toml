@@ -20,7 +20,7 @@ easyai = "^2.0.12"
 python-fasthtml = "^0.12.4"
 
 # Dev dependencies
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"
 black = "^24.1.0"
 ruff = "^0.1.1"
