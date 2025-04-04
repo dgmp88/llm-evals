@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, TypedDict
 
 from pydantic import BaseModel
 
@@ -36,13 +36,12 @@ Model = Literal[
     "together_ai/google/gemma-2-27b-it",
     ## Mistral
     "together_ai/mistralai/Mistral-Small-24B-Instruct-2501",
-    "ollama/gemma3:1b", 
-
+    "ollama/gemma3:1b",
 ]
 
 Role = Literal["user", "system", "assistant"]
 
 
-class Message(BaseModel):
+class Message(TypedDict):
     content: str
     role: Role

@@ -93,7 +93,7 @@ class Eval(ABC):
 
     def print_chat(self):
         for message in self.chat_history:
-            print(f"{message.role}: {message.content}")
+            print(f"{message['role']}: {message['content']}")
 
 
 def batch_eval(num_runs: int, eval_factory: Callable[[int], Eval]):

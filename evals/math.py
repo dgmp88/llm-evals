@@ -63,7 +63,7 @@ class MathEval(Eval):
         gt: float = eval(user.problem)
         gt = round(gt, 2)  # round to 2 decimal places as in the system prompt
 
-        response = self.chat_history[-1].content
+        response = self.chat_history[-1]["content"]
         pred: float | None = None
         try:
             pred = float(response)
