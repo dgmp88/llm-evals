@@ -98,7 +98,7 @@ class TicTacToeEval(Eval):
     def __init__(
         self,
         rng_seed: int,
-        model: Model,
+        model: str,
         opponent: OpponentType,
     ):
         super().__init__(rng_seed=rng_seed)

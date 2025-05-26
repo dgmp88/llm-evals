@@ -1,40 +1,62 @@
-import dotenv
-from litellm import batch_completion as lite_batch_completion
-from litellm import completion as lite_completion  # type: ignore
+from typing import List
 
-from evals.types import Message, Model
+from openai import OpenAI
 
-dotenv.load_dotenv()
+from evals.types import Message
+from evals.util.env import ENV
 
 DEFAULT_TEMPERATURE = 0.001  # 0 breaks some providers, so just set it super low
 DEFAULT_MAX_TOKENS = 10
 
 
-def completion(model: Model, messages: list[Message]) -> str:
-    response = lite_completion(
+# Initialize OpenAI client with OpenRouter
+def get_client() -> OpenAI:
+    """Get OpenAI client configured for OpenRouter."""
+    api_key = ENV.OPENROUTER_API_KEY
+    if not api_key:
+        raise ValueError(
+            "OPENROUTER_API_KEY environment variable is required. "
+            "Please set it in your .env file or environment."
+        )
+
+    return OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
+
+
+def completion(model: str, messages: List[Message]) -> str:
+    """Get a single completion from the model."""
+    client = get_client()
+    response = client.chat.completions.create(
         model=model,
         messages=messages,
         max_tokens=DEFAULT_MAX_TOKENS,
         temperature=DEFAULT_TEMPERATURE,
     )
-    message = response.choices[0].message.content  # type: ignore
 
-    return str(message)
+    if response.choices and response.choices[0].message.content:
+        return response.choices[0].message.content
+
+    return ""
 
 
-def batch_completion(model: Model, messages: list[list[Message]]) -> list[str]:
-    responses = lite_batch_completion(
-        model=model,
-        messages=messages,
-        max_tokens=DEFAULT_MAX_TOKENS,
-        temperature=DEFAULT_TEMPERATURE,
-        num_retries=2,
-        n=1,
-    )
-    return [str(response.choices[0].message.content) for response in responses]
+def batch_completion(model: str, messages: List[List[Message]]) -> List[str]:
+    """Get multiple completions from the model."""
+    results = []
+    for message_list in messages:
+        try:
+            result = completion(model, message_list)
+            results.append(result)
+        except Exception as e:
+            print(f"Error in batch completion: {e}")
+            results.append("")
+
+    return results
 
 
 def test_llm(model: str):
+    """Test the LLM with a simple message."""
     result = completion(model, [Message(content="hello", role="user")])
     print(result)
 
