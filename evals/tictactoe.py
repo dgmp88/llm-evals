@@ -6,6 +6,7 @@ from easyAI import AI_Player, Negamax
 from easyAI.games.TicTacToe import TicTacToe as EAITicTacToe
 
 from evals.core import Assistant, Eval, User, batch_eval
+from evals.registry import register_eval
 
 SYSTEM_PROMPT = """You are an expert TicTacToe player, and always make the perfect move. Respond only with a number between 1 and 9, where 1 is the top-left corner and 9 is the bottom-right corner. The game board is numbered as follows:
 
@@ -62,6 +63,7 @@ class TicTacToeAssistant(Assistant):
 
     def post_respond(self, chat_history, response):
         # Update the game board
+        breakpoint()
         move = int(response)
         self.game.play_move(move)
 
@@ -96,8 +98,8 @@ class TicTacToeEval(Eval):
 
     def __init__(
         self,
-        rng_seed: int,
         model: str,
+        rng_seed: int,
         opponent: OpponentType,
     ):
         super().__init__(rng_seed=rng_seed)
@@ -140,6 +142,22 @@ def tic_tac_toe(model: str, opponent: OpponentType, runs: int = 10):
         return TicTacToeEval(model=model, opponent=opponent, rng_seed=seed)
 
     batch_eval(runs, eval_factory)
+
+
+# Register the evaluations
+register_eval(
+    name="tictactoe_random",
+    factory=lambda model, rng_seed, **kwargs: TicTacToeEval(model, rng_seed, "random"),
+    description="Tic-tac-toe against a random opponent",
+    default_runs=10,
+)
+
+register_eval(
+    name="tictactoe_perfect",
+    factory=lambda model, rng_seed, **kwargs: TicTacToeEval(model, rng_seed, "perfect"),
+    description="Tic-tac-toe against a perfect AI opponent",
+    default_runs=10,
+)
 
 
 if __name__ == "__main__":

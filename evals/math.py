@@ -3,6 +3,7 @@ from typing import cast
 import numpy as np
 
 from evals.core import Assistant, Eval, User, batch_eval
+from evals.registry import register_eval
 
 SYSTEM_PROMPT = """Answer the math problem with the numeric result only. Round to two decimal places if necessary. Do not add newlines, commas, or any other characters.
 
@@ -33,7 +34,7 @@ class MathAssistant(Assistant):
 
 
 class MathUser(User):
-    def __init__(self, rng: np.random.Generator, low: int, high: int):
+    def __init__(self, rng: np.random.Generator, low: int = 100, high: int = 1000):
         super().__init__()
         self.low = low
         self.high = high
@@ -52,10 +53,10 @@ class MathUser(User):
 class MathEval(Eval):
     name = "math_eval"
 
-    def __init__(self, model: str, rng_seed: int):
+    def __init__(self, model: str, rng_seed: int, low: int = 100, high: int = 1000):
         super().__init__(rng_seed=rng_seed)
         self.assistant = MathAssistant(model=model)
-        self.user = MathUser(rng=self.rng, low=100, high=1000)
+        self.user = MathUser(rng=self.rng, low=low, high=high)
 
     def evaluate(self) -> float:
         user = cast(MathUser, self.user)
@@ -85,6 +86,17 @@ def math(model: str, num_problems: int = 50):
         )
 
     batch_eval(num_problems, eval_factory)
+
+
+# Register the evaluation
+register_eval(
+    name="math",
+    factory=MathEval,
+    description="Basic arithmetic problems with random integers",
+    default_runs=50,
+    low=100,
+    high=1000,
+)
 
 
 if __name__ == "__main__":
