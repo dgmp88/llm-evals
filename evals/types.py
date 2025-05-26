@@ -1,7 +1,5 @@
 from typing import Literal, TypedDict
 
-from pydantic import BaseModel
-
 Model = Literal[
     # https://docs.litellm.ai/docs/providers
     # OpenAI
