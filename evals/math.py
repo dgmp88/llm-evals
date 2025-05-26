@@ -3,7 +3,6 @@ from typing import cast
 import numpy as np
 
 from evals.core import Assistant, Eval, User, batch_eval
-from evals.types import Model
 
 SYSTEM_PROMPT = """Answer the math problem with the numeric result only. Round to two decimal places if necessary. Do not add newlines, commas, or any other characters.
 
@@ -26,7 +25,7 @@ Assistant: 0.33"""
 
 
 class MathAssistant(Assistant):
-    def __init__(self, model: Model):
+    def __init__(self, model: str):
         super().__init__(model=model, system_prompt=SYSTEM_PROMPT)
 
     def is_done(self):
@@ -53,12 +52,12 @@ class MathUser(User):
 class MathEval(Eval):
     name = "math_eval"
 
-    def __init__(self, model: Model, rng_seed: int):
+    def __init__(self, model: str, rng_seed: int):
         super().__init__(rng_seed=rng_seed)
         self.assistant = MathAssistant(model=model)
         self.user = MathUser(rng=self.rng, low=100, high=1000)
 
-    def evaluate(self):
+    def evaluate(self) -> float:
         user = cast(MathUser, self.user)
         gt: float = eval(user.problem)
         gt = round(gt, 2)  # round to 2 decimal places as in the system prompt
@@ -73,10 +72,10 @@ class MathEval(Eval):
         correct = pred == gt
         if not correct:
             print(f"{user.problem} - wrong with: {pred} (gt: {gt})")
-        return correct
+        return float(correct)
 
 
-def math(model: Model, num_problems: int = 50):
+def math(model: str, num_problems: int = 50):
     """random numbers under 10, addition, subtraction, multiplication, division"""
 
     def eval_factory(seed: int):

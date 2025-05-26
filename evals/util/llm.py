@@ -28,9 +28,10 @@ def get_client() -> OpenAI:
 def completion(model: str, messages: List[Message]) -> str:
     """Get a single completion from the model."""
     client = get_client()
+    # type: ignore
     response = client.chat.completions.create(
         model=model,
-        messages=messages,
+        messages=messages,  # type: ignore
         max_tokens=DEFAULT_MAX_TOKENS,
         temperature=DEFAULT_TEMPERATURE,
     )

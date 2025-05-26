@@ -5,7 +5,7 @@ from typing import Callable
 import numpy as np
 from tqdm import tqdm
 
-from evals.types import Message, Model, Role
+from evals.types import Message, Role
 from evals.util.db import EvalResult
 from evals.util.llm import completion
 
@@ -28,9 +28,9 @@ TIMES = []
 class Assistant(Agent):
     role = "assistant"
 
-    def __init__(self, model: Model, system_prompt: str):
+    def __init__(self, model: str, system_prompt: str):
         super().__init__()
-        self.model: Model = model
+        self.model: str = model
         self.system_message = Message(role="system", content=system_prompt)
 
     def pre_respond(self, chat_history: list[Message]):

@@ -50,7 +50,7 @@ def read_all(strip_prefix=True):
     )
 
     if strip_prefix:
-        results["model_name"] = results["model_name"].map(prefix_strip)
+        results["model_name"] = results["model_name"].map(prefix_strip)  # type: ignore
 
     return results
 
