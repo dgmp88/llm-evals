@@ -6,8 +6,8 @@ from typing import Optional
 import fire
 
 # Import all evaluation modules to trigger registration
-import evals.math
-import evals.tictactoe
+import evals.math  # noqa: F401
+import evals.tictactoe  # noqa: F401
 from evals.core import batch_eval, debug_eval
 from evals.registry import create_eval_factory, get_eval_config, get_eval_names
 
