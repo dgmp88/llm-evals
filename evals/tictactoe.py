@@ -63,7 +63,6 @@ class TicTacToeAssistant(Assistant):
 
     def post_respond(self, chat_history, response):
         # Update the game board
-        breakpoint()
         move = int(response)
         self.game.play_move(move)
 

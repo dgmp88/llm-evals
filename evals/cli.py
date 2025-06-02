@@ -1,6 +1,7 @@
 """
 Unified CLI for running all evaluations.
 """
+
 from typing import Optional
 
 from cyclopts import App

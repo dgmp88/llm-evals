@@ -18,7 +18,7 @@ dependencies = [
     "python-fasthtml>=0.12.4,<0.13",
     "plotly>=6.0.0,<7",
     "openai>=1.0.0,<2",
-    "ruff>=0.1.15",
+    "ruff==0.11.11",
     "pyrefly>=0.16.3",
     "cyclopts>=3.16.2",
 ]
@@ -27,7 +27,7 @@ dependencies = [
 dev = [
     "ipykernel>=6.29.5,<7",
     "black>=24.1.0,<25",
-    "ruff>=0.1.1,<0.2",
+    "ruff>=0.1.1,<1.0",
     "pyright>=1.1.389,<2",
     "fire>=0.7.0,<0.8",
     "google-generativeai>=0.8.3,<0.9",
