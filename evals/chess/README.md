@@ -26,119 +26,6 @@ Generate Stockfish vs Stockfish games at multiple ELO levels to create evaluatio
 - **Total Positions**: 10 games × 2 positions = 20 evaluation positions
 
 #### 1.3 Storage Implementation
-```python
-import chess.engine
-import chess
-import chess.pgn
-import json
-import datetime
-from pathlib import Path
-
-def generate_and_store_game(skill_level, game_number, output_dir="chess_data"):
-    """Generate a game and store as PGN file"""
-    engine = chess.engine.SimpleEngine.popen_uci("stockfish")
-    engine.configure({
-        "Skill Level": skill_level
-    })
-    
-    board = chess.Board()
-    game = chess.pgn.Game()
-    
-    # Set metadata
-    game.headers["White"] = f"Stockfish_Skill_{skill_level}"
-    game.headers["Black"] = f"Stockfish_Skill_{skill_level}"
-    game.headers["Date"] = datetime.datetime.now().strftime("%Y.%m.%d")
-    game.headers["SkillLevel"] = str(skill_level)
-    game.headers["TimeControl"] = "1s"
-    
-    node = game
-    moves = []
-    
-    while not board.is_game_over():
-        result = engine.play(board, chess.engine.Limit(time=1.0))
-        board.push(result.move)
-        moves.append(result.move)
-        node = node.add_variation(result.move)
-    
-    game.headers["Result"] = board.result()
-    engine.quit()
-    
-    # Save PGN file
-    Path(f"{output_dir}/games").mkdir(parents=True, exist_ok=True)
-    pgn_path = f"{output_dir}/games/skill_{skill_level}_game_{game_number}.pgn"
-    
-    with open(pgn_path, "w") as f:
-        print(game, file=f)
-    
-    return moves, board.result(), pgn_path
-
-def extract_test_positions(pgn_path, skill_level, game_number):
-    """Extract test positions from a PGN file"""
-    with open(pgn_path) as f:
-        game = chess.pgn.read_game(f)
-    
-    board = chess.Board()
-    positions = []
-    moves = list(game.mainline_moves())
-    
-    for i, move in enumerate(moves):
-        # Extract early (moves 3-5) and late (last 6 moves) positions
-        if i in [3, 4, 5] or i >= len(moves) - 6:
-            positions.append({
-                'id': f"skill{skill_level}_g{game_number}_move{i+1}",
-                'source_skill': skill_level,
-                'estimated_elo': {5: 1200, 10: 1400, 15: 1600, 18: 1800, 20: 2000}[skill_level],
-                'game_id': f"skill_{skill_level}_game_{game_number}",
-                'move_number': i + 1,
-                'phase': 'early' if i <= 5 else 'late',
-                'fen': board.fen(),
-                'best_move': move.uci(),
-                'move_san': board.san(move),  # Standard algebraic notation
-                'context': {
-                    'total_moves': len(moves),
-                    'game_result': game.headers.get("Result", "*")
-                }
-            })
-        board.push(move)
-    
-    return positions
-
-def create_complete_test_suite(output_dir="chess_data"):
-    """Generate all games and create test suite"""
-    skill_levels = [5, 10, 15, 18, 20]  # Approximate ELO: 1200, 1400, 1600, 1800, 2000+
-    all_positions = []
-    
-    for skill in skill_levels:
-        for game_num in range(1, 3):  # 2 games per skill level
-            print(f"Generating Skill Level {skill}, Game {game_num}...")
-            
-            # Generate and store game
-            moves, result, pgn_path = generate_and_store_game(skill, game_num, output_dir)
-            
-            # Extract positions
-            positions = extract_test_positions(pgn_path, skill, game_num)
-            all_positions.extend(positions)
-    
-    # Save test suite as JSON
-    test_suite = {
-        "metadata": {
-            "version": "1.0",
-            "generated_date": datetime.datetime.now().isoformat(),
-            "total_positions": len(all_positions),
-            "skill_levels": skill_levels,
-            "elo_mapping": {5: 1200, 10: 1400, 15: 1600, 18: 1800, 20: 2000},
-            "games_per_skill": 2
-        },
-        "positions": all_positions
-    }
-    
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
-    with open(f"{output_dir}/test_suite.json", "w") as f:
-        json.dump(test_suite, f, indent=2)
-    
-    print(f"Generated {len(all_positions)} test positions")
-    return f"{output_dir}/test_suite.json"
-```
 
 ### Step 2: Move Grading System
 Build logic to evaluate move quality using Stockfish analysis.
@@ -352,3 +239,106 @@ class LLMChessEvaluator:
 - Expand to different time controls
 - Add positional concept evaluation
 - Create ELO prediction model based on static evaluation
+
+---
+
+## Implemented Approach & Analysis
+
+### Current Implementation Status
+
+We have successfully implemented a **centipawn loss evaluation system** using Stockfish to grade chess moves. Here's what has been built and tested:
+
+#### Our Move Grading Approach
+```python
+class MoveGrader:
+    def __init__(self, depth=18, time_limit=2.0):
+        # Uses Stockfish with depth 18 and 2-second time limit per position
+        # Significantly more thorough than originally planned depth of 12
+```
+
+**Key Features:**
+- **Deep Analysis**: Stockfish depth 18 + 2-second time limits for high accuracy
+- **Centipawn Loss Metric**: Measures how many centipawns worse each move is vs the best move
+- **Comprehensive Game Analysis**: Analyzes every move in a game, not just selected positions
+- **Player-Specific Metrics**: Separate average centipawn loss for White and Black
+
+### Test Results from Generated Games
+
+We analyzed 5 games across different Stockfish skill levels with these findings:
+
+| Game | Total Moves | White Avg CP Loss | Black Avg CP Loss | Overall Avg |
+|------|-------------|------------------|------------------|-------------|
+| skill_5  | 78  | 30.6 | 15.9 | 23.3 |
+| skill_10 | 90  | 20.9 | **204.4** | 112.6 |
+| skill_15 | 136 | 13.7 | 12.6 | **13.1** |
+| skill_18 | 145 | 7.8  | 9.1  | **8.5** |
+| skill_20 | 269 | 65.6 | 66.5 | 66.1 |
+
+**Key Insights:**
+- **Best Performance**: skill_18 with only 8.5 cp average loss
+- **Counterintuitive Results**: skill_20 (highest) performed worse than skill_15 and skill_18
+- **Outlier Detection**: skill_10 showed massive player disparity (20.9 vs 204.4 cp loss)
+
+### Strengths of Our Approach
+
+1. **Objective & Precise**: Centipawn loss provides granular, engine-based evaluation
+2. **Comprehensive Coverage**: Analyzes entire games rather than cherry-picked positions  
+3. **Scalable**: Can process large numbers of games efficiently
+4. **Player-Aware**: Distinguishes between White and Black performance
+5. **Validated**: Successfully runs against real game data with meaningful results
+
+### Critical Shortcomings & Limitations
+
+#### 1. **Engine Analysis Limitations**
+- **Horizon Effect**: Even depth 18 misses very deep tactical sequences
+- **Positional Blindness**: Stockfish may undervalue long-term positional concepts
+- **Style Bias**: Optimizes for engine-style play, not human-style understanding
+
+#### 2. **Evaluation Metric Issues**
+- **Linear Assumption**: Assumes centipawn loss scales linearly with move quality
+- **Context Ignorance**: 50cp loss in a winning position ≠ 50cp loss when losing
+- **Tactical vs Positional**: May overweight tactical precision vs positional understanding
+
+#### 3. **Test Data Problems**
+- **Self-Play Bias**: Stockfish vs Stockfish games don't represent human play patterns
+- **Skill Level Inconsistency**: Our results show skill levels don't correlate as expected
+- **Limited Sample Size**: Only 5 games provides insufficient statistical power
+- **No Opening/Endgame Specialization**: Treats all game phases equally
+
+#### 4. **LLM Evaluation Gaps**
+- **Move Selection Only**: Doesn't test chess understanding, planning, or explanation
+- **No Time Pressure**: Real games involve time management decisions
+- **Missing Context**: LLMs might need game history, not just current position
+- **Format Assumptions**: Assumes LLMs can output clean UCI notation
+
+#### 5. **Statistical & Methodological Issues**
+- **No Baseline Comparison**: We don't know what "good" centipawn loss should be
+- **Inconsistent Results**: skill_20 performing worse than skill_15/18 suggests data quality issues
+- **No Confidence Intervals**: Results lack statistical uncertainty quantification
+- **Cherry-Picking Risk**: Testing only 2 moves per game could miss systematic patterns
+
+### Recommended Improvements
+
+#### Immediate Fixes
+1. **Expand Test Data**: Generate 20+ games per skill level for statistical significance
+2. **Add Human Games**: Include master-level human games for realistic baselines
+3. **Contextual Scoring**: Weight centipawn loss by game phase and position type
+4. **Multiple Engines**: Cross-validate with Leela Chess Zero or other engines
+
+#### Methodological Enhancements
+1. **Positional Understanding Tests**: Include positions requiring long-term planning
+2. **Explanation Evaluation**: Test LLM's ability to explain moves, not just make them
+3. **Time-Aware Testing**: Factor in reasonable move times for different position types
+4. **Opening Book Integration**: Separate evaluation of opening knowledge vs middlegame skill
+
+#### Statistical Rigor
+1. **Confidence Intervals**: Report statistical uncertainty for all metrics
+2. **Skill Level Validation**: Verify that higher skill levels actually play better on average
+3. **Cross-Validation**: Test grading system on positions with known human evaluations
+4. **Effect Size Analysis**: Determine meaningful differences between centipawn loss ranges
+
+### Conclusion
+
+Our implementation provides a **solid foundation** for chess move evaluation but has **significant limitations** for comprehensive LLM chess ability assessment. The centipawn loss approach works well for tactical evaluation but misses crucial aspects of chess understanding that might be more relevant for LLM evaluation.
+
+**For production use**, this system should be supplemented with positional understanding tests, explanation evaluation, and human-validated reference games to provide a more complete picture of LLM chess capabilities.

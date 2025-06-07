@@ -1,0 +1,11 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.06.07"]
+[Round "?"]
+[White "Stockfish_Skill_5"]
+[Black "Stockfish_Skill_5"]
+[Result "0-1"]
+[SkillLevel "5"]
+[TimeControl "1s"]
+
+1. Nf3 d5 2. e3 e6 3. Be2 b6 4. d4 Bd6 5. a4 Nf6 6. b3 c5 7. a5 bxa5 8. O-O O-O 9. dxc5 Be7 10. Qd2 Bb7 11. Rd1 Bxc5 12. Ba3 Bxa3 13. Nxa3 Qb6 14. Nb5 Rc8 15. Qxa5 Rxc2 16. Qxb6 axb6 17. Bf1 Rca2 18. Nd6 Rxa1 19. Rxa1 Rxa1 20. Nxb7 Ne4 21. Nc5 Nxc5 22. h3 Nxb3 23. h4 Na6 24. g4 f6 25. h5 e5 26. h6 Nc7 27. g5 e4 28. Nh2 f5 29. f3 gxh6 30. gxh6 Ne6 31. Kf2 Nbc5 32. Bb5 Kf8 33. f4 Ra2+ 34. Be2 Rc2 35. Kf1 d4 36. Bf3 dxe3 37. Ng4 fxg4 38. f5 exf3 39. f6 Rc1# 0-1

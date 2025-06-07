@@ -1,0 +1,11 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.06.07"]
+[Round "?"]
+[White "Stockfish_Skill_15"]
+[Black "Stockfish_Skill_15"]
+[Result "0-1"]
+[SkillLevel "15"]
+[TimeControl "1s"]
+
+1. e4 c5 2. Nf3 e6 3. d4 Be7 4. c3 d5 5. e5 Nc6 6. Bd3 Bd7 7. Be3 Qb6 8. Qe2 cxd4 9. Bxd4 Qc7 10. Nbd2 Nh6 11. Nb3 f5 12. O-O Nxd4 13. cxd4 b6 14. Rac1 Qb7 15. Rc3 Bb4 16. Ba6 Qb8 17. Rc2 O-O 18. Nc1 f4 19. h4 Nf5 20. Nd3 Be7 21. Rc3 h6 22. Rfc1 Qe8 23. h5 Qxh5 24. Rc7 Qe8 25. Rxd7 Qxd7 26. Nxf4 Bh4 27. Nxh4 Nxh4 28. Qg4 Nf5 29. Bd3 Nxd4 30. Rf1 Nf5 31. Qg6 Qe8 32. Qxe6+ Qxe6 33. Nxe6 Rf7 34. g4 Nh4 35. f4 g5 36. Rf2 Rc8 37. f5 Rc1+ 38. Kh2 Re1 39. Nd8 Rf8 40. Ne6 Rc8 41. Nd4 Rxe5 42. Ba6 Rc7 43. Bd3 Rc1 44. Nf3 Re8 45. Nxh4 gxh4 46. f6 Ree1 47. Bb5 Re3 48. Kg2 d4 49. f7+ Kf8 50. Rd2 Rg3+ 51. Kh2 Re3 52. Be2 Rc7 53. Bd3 Kxf7 54. Rd1 Rc6 55. Bb1 Rf6 56. g5 hxg5 57. Rxd4 Re1 58. Be4 Rf2+ 59. Kh3 Re3+ 60. Kg4 Rf4+ 61. Kxg5 Rexe4 62. Rd6 h3 63. a3 h2 64. b4 h1=Q 65. Rd7+ Kg8 66. a4 Qh4+ 67. Kg6 Rg4+ 68. Kf5 Qg5# 0-1

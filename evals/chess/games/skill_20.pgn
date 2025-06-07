@@ -1,0 +1,11 @@
+[Event "?"]
+[Site "?"]
+[Date "2025.06.07"]
+[Round "?"]
+[White "Stockfish_Skill_20"]
+[Black "Stockfish_Skill_20"]
+[Result "1-0"]
+[SkillLevel "20"]
+[TimeControl "1s"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 Nf6 4. O-O Nxe4 5. Re1 Nd6 6. Nxe5 Be7 7. Bf1 Nxe5 8. Rxe5 O-O 9. d4 Bf6 10. Re1 Nf5 11. d5 d6 12. Nd2 c6 13. Nf3 Bd7 14. c3 Re8 15. Rxe8+ Qxe8 16. h3 g6 17. g4 Ng7 18. Bh6 Qe4 19. c4 cxd5 20. cxd5 Rc8 21. Qb3 b5 22. Re1 Qa4 23. Qxa4 bxa4 24. Nd2 Ne8 25. Nc4 Bd4 26. Bf4 Bc5 27. Re7 Rc7 28. Na5 Kf8 29. Nc6 Bxc6 30. Rxc7 Nxc7 31. dxc6 Ke7 32. Kg2 Bd4 33. Bg3 Bxb2 34. f4 a3 35. Be1 d5 36. Bb4+ Kd8 37. Be2 Bd4 38. Bf3 Bb6 39. Bxa3 d4 40. Be2 Nd5 41. Kf3 Kc7 42. Bb5 Ba5 43. Bf8 Nc3 44. a4 a6 45. Bxa6 Nxa4 46. Bc4 Nb6 47. Bxf7 d3 48. Bb3 Kxc6 49. Ke4 d2 50. Kd4 Nd7 51. Ba4+ Kc7 52. Be7 Nb6 53. Bd1 Kd7 54. Ba3 Na8 55. f5 Nc7 56. Kc4 Ne8 57. Ba4+ Kd8 58. fxg6 hxg6 59. Kd3 Nf6 60. Kd4 Bc7 61. Bb4 Bf4 62. Ba5+ Ke7 63. Bb4+ Kd8 64. Kd3 Nd5 65. Bxd2 Bxd2 66. Kxd2 Ke7 67. Bc6 Nf4 68. h4 g5 69. h5 Kf6 70. Ke3 Kf7 71. Ke4 Kf6 72. Ke3 Kg7 73. Bb7 Kg8 74. Be4 Kg7 75. Kd4 Nh3 76. Ke5 Nf4 77. Bf3 Kh6 78. Bd1 Nd3+ 79. Kf5 Nf2 80. Bf3 Nh3 81. Be2 Nf4 82. Bf3 Nd3 83. Ke6 Nf4+ 84. Kf6 Nh3 85. Be2 Ng1 86. Bd1 Nh3 87. Ke6 Nf4+ 88. Kf5 Nh3 89. Be2 Ng1 90. Bf1 Nf3 91. Kf6 Nd2 92. Be2 Ne4+ 93. Ke5 Nf2 94. Kf5 Nh3 95. Bd1 Ng1 96. Ke5 Nh3 97. Kf5 Ng1 98. Ke4 Nh3 99. Bf3 Ng1 100. Bd1 Nh3 101. Bf3 Ng1 102. Bg2 Ne2 103. Ke5 Nf4 104. Bf3 Nd3+ 105. Ke6 Nf4+ 106. Kf6 Nd3 107. Bd1 Nc1 108. Bf3 Na2 109. Ke5 Nc1 110. Kd4 Nb3+ 111. Kd5 Kg7 112. Bd1 Nc1 113. Kd4 Na2 114. Kc4 Nc1 115. Kc3 Kh6 116. Bf3 Kg7 117. Bd1 Na2+ 118. Kb3 Nc1+ 119. Kb2 Kg8 120. Kxc1 Kf7 121. Kd2 Ke6 122. Ke3 Kf6 123. Ke4 Kg7 124. Bb3 Kf6 125. Bc4 Kg7 126. Kf5 Kh6 127. Be6 Kh7 128. Kxg5 Kg7 129. h6+ Kh8 130. Bc4 Kh7 131. Kh5 Kh8 132. g5 Kh7 133. g6+ Kh8 134. g7+ Kh7 135. g8=Q# 1-0
