@@ -1,0 +1,78 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Environment Information
+
+## Project Overview
+- **Project Name**: LLM Evals
+- **Purpose**: Evaluation framework for testing Large Language Models across different tasks
+- **Python Version**: 3.12
+- **Package Manager**: UV (uv.lock present)
+- **Deployment**: Streamlit Cloud (https://llm-evals.streamlit.app/)
+
+## Core Frameworks & Libraries
+
+### Data Processing & Validation
+- **Pydantic**: v2.10.1+ - Data validation and settings management
+- **Pydantic Settings**: v2.6.1+ - Environment configuration
+- **Pandas**: v2.2.3+ - Data manipulation and analysis
+- **NumPy**: Included via dependencies - Numerical operations
+
+### Database & Storage
+- **Peewee**: v3.17.8+ - ORM for database operations
+- **PostgreSQL**: Using Neon Postgres (via psycopg2-binary v2.9.10+)
+
+### LLM Integration
+- **OpenAI**: v1.0.0+ - API client (configured for OpenRouter)
+- **OpenRouter**: Primary LLM provider (supports OpenAI, Anthropic, Google, Meta, etc.)
+
+### Visualization
+- **Plotly**: v6.0.0+ - Interactive charts and graphs
+- **Altair**: Used in Streamlit app for data visualization
+
+### Development Tools
+- **Ruff**: v0.11.11 - Code linting and formatting (replaces Black/Flake8)
+- **Pyright**: v1.1.389+ - Type checking
+- **Black**: v24.1.0+ - Code formatting (backup to Ruff)
+- **PyTest**: v8.3.3+ - Testing framework
+- **Pyrefly**: Type checking
+
+### CLI & Utilities
+- **Cyclopts**: v3.16.2+ - Modern CLI framework
+- **Fire**: v0.7.0+ - Alternative CLI tool (dev dependency)
+- **Tabulate**: v0.9.0+ - Table formatting
+- **Tqdm**: v4.67.1+ - Progress bars
+
+### AI/ML Evaluation
+- **DeepEval**: v3.0.3+ - LLM evaluation framework
+- **EasyAI**: v2.0.12+ - Game AI for TicTacToe evaluation
+
+### Game Engines (for evaluations)
+- **Stockfish**: v3.28.0+ - Chess engine
+- **Chess**: v1.11.2+ - Chess library
+- **EasyAI**: Game AI framework
+
+## Development Configuration
+
+### IDE Setup
+- **VS Code**: Configured with Ruff as default Python formatter
+- **Pylance**: Language server for Python
+- **Auto-imports**: Enabled on save
+
+### Build System
+
+### Key Features
+- **Concurrent Evaluation**: ThreadPoolExecutor for parallel LLM evaluations
+- **Multiple Eval Types**: Math, TicTacToe, Chess evaluations
+- **Model Agnostic**: Supports 50+ models via OpenRouter
+- **Database Persistence**: Results stored in PostgreSQL
+- **Web Dashboard**: Real-time results visualization
+- **CLI Interface**: Cyclopts-based command-line tools
+
+### Environment Variables
+- `OPENROUTER_API_KEY`: Required for LLM access
+- `NEON_POSTGRES`: Database connection string
+- `DEV`: Development mode flag
+- `PORT`: Server port (default: 10000)
