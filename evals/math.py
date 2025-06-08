@@ -66,8 +66,10 @@ class MathEval(Eval):
         response = self.chat_history[-1]["content"]
         pred: float | None = None
         try:
-            pred = float(response)
+            pred = float(response.strip())
+            pred = round(pred, 2)  # round to match expected precision
         except ValueError:
+            # Keep pred as None if parsing fails
             pass
 
         correct = pred == gt

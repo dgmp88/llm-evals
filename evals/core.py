@@ -172,8 +172,29 @@ def batch_eval(
         if progress_bar:
             progress_bar.close()
 
+    # Check if we have enough successful results
+    success_rate = len(results) / num_runs if num_runs > 0 else 0
+
     if not results:
-        raise ValueError("No evaluations completed successfully")
+        # Provide more detailed error information
+        error_msg = f"No evaluations completed successfully out of {num_runs} runs."
+        if failed_runs:
+            error_msg += f" Failed runs: {failed_runs}"
+        if len(failed_runs) == num_runs:
+            error_msg += " All evaluations failed."
+        raise ValueError(error_msg)
+    elif success_rate < 0.1 and num_runs > 1:
+        # If success rate is very low (< 10%) and we ran multiple evaluations, warn but continue
+        print(
+            f"⚠️  WARNING: Very low success rate ({success_rate:.1%}). Only {len(results)}/{num_runs} evaluations succeeded."
+        )
+        print(f"   Failed runs: {failed_runs}")
+        print("   Continuing with available results...")
+    elif failed_runs and len(failed_runs) > 0:
+        # Just log the failures if some succeeded
+        print(
+            f"ℹ️  Some evaluations failed: {len(failed_runs)}/{num_runs} failed ({len(failed_runs) / num_runs:.1%})"
+        )
 
     # Calculate statistics
     results_array = np.array(results, dtype=np.float64)

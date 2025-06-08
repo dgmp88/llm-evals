@@ -15,7 +15,8 @@ import type { Evalresult } from "~/lib/db.d";
 
 // Types for pivoted data
 interface PivotedRow {
-  model_display: string;
+  provider: string;
+  model: string;
   [evalName: string]: string | { score: number; timestamp: Date };
 }
 
@@ -31,8 +32,7 @@ const getEvalData = query(async () => {
     const latestResults = new Map<string, Selectable<Evalresult>>();
 
     allResults.forEach((result) => {
-      const modelDisplay = `${result.provider}/${result.model}`;
-      const key = `${modelDisplay}-${result.eval_name}`;
+      const key = `${result.provider}/${result.model}-${result.eval_name}`;
       const existing = latestResults.get(key);
 
       if (
@@ -51,14 +51,15 @@ const getEvalData = query(async () => {
 
     // Group by model and create pivoted rows
     results.forEach((result) => {
-      const modelDisplay = `${result.provider}/${result.model}`;
-      if (!modelMap.has(modelDisplay)) {
-        modelMap.set(modelDisplay, {
-          model_display: modelDisplay,
+      const modelKey = `${result.provider}/${result.model}`;
+      if (!modelMap.has(modelKey)) {
+        modelMap.set(modelKey, {
+          provider: result.provider,
+          model: result.model,
         });
       }
 
-      const row = modelMap.get(modelDisplay)!;
+      const row = modelMap.get(modelKey)!;
       row[result.eval_name] = {
         score: result.result,
         timestamp: result.timestamp,
@@ -108,7 +109,7 @@ const createDynamicColumns = (data: PivotedRow[]): ColumnDef<PivotedRow>[] => {
   const evalNames = new Set<string>();
   data.forEach((row) => {
     Object.keys(row).forEach((key) => {
-      if (key !== "model_display") {
+      if (key !== "provider" && key !== "model") {
         evalNames.add(key);
       }
     });
@@ -116,7 +117,12 @@ const createDynamicColumns = (data: PivotedRow[]): ColumnDef<PivotedRow>[] => {
 
   const columns: ColumnDef<PivotedRow>[] = [
     {
-      accessorKey: "model_display",
+      accessorKey: "provider",
+      header: "Provider",
+      cell: (info) => info.getValue() as string,
+    },
+    {
+      accessorKey: "model",
       header: "Model",
       cell: (info) => info.getValue() as string,
     },
