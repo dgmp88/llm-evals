@@ -1,12 +1,15 @@
+import json
 from typing import List
 
+import requests
 from openai import OpenAI
 
 from evals.types import Message
 from evals.util.env import ENV
 
 DEFAULT_TEMPERATURE = 0.001  # 0 breaks some providers, so just set it super low
-DEFAULT_MAX_TOKENS = 10
+DEFAULT_MAX_TOKENS = None  # Set to none for reasoning models
+DEFAULT_MAX_REASONING_TOKENS = 512  # I dunno, some random number
 
 
 # Initialize OpenAI client with OpenRouter
@@ -26,6 +29,34 @@ def get_client() -> OpenAI:
 
 
 def completion(model: str, messages: List[Message]) -> str:
+    response = requests.post(
+        url="https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {ENV.OPENROUTER_API_KEY}",
+        },
+        data=json.dumps(
+            {
+                "model": model,
+                "messages": messages,
+                "max_tokens": DEFAULT_MAX_TOKENS,
+                "temperature": DEFAULT_TEMPERATURE,
+                "reasoning": {
+                    "exclude": True,
+                    "max_tokens": DEFAULT_MAX_REASONING_TOKENS,
+                },
+            }
+        ),
+    )
+
+    result = response.json()
+
+    choice = result["choices"][0]
+    content = choice["message"]["content"]
+
+    return content
+
+
+def completion_oai(model: str, messages: List[Message]) -> str:
     """Get a single completion from the model."""
     client = get_client()
     # type: ignore

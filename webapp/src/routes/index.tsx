@@ -79,12 +79,32 @@ const getEvalData = query(async () => {
 const formatScore = (score: number) => score.toFixed(4);
 const formatTimestamp = (date: Date) => new Date(date).toLocaleString();
 
+// Evaluation explanations mapping
+const evalExplanations: Record<string, string> = {
+  math_eval:
+    "Fraction correct of 50 x 3 digit multiplication/division/addition/subtraction problems <br><br> e.g. 394*123",
+  tictactoe_random:
+    "Average win rate of 10 x full games of tic tac toe against an opponent playing randomly <br><br> 0 for loss, 0.5 for draw, 1 for win",
+  tictactoe_perfect:
+    "Average win rate of 10 x full games of tic tac toe against an opponent playing perfectly <br><br> 0 for loss, 0.5 for draw, 1 for win",
+};
+
+const getEvalExplanation = (evalName: string): string => {
+  for (const [key, explanation] of Object.entries(evalExplanations)) {
+    if (evalName.includes(key)) {
+      return explanation;
+    }
+  }
+  return `${evalName} evaluation - No detailed description available`;
+};
+
 // CSS classes organization
 const tableStyles = {
-  container: "bg-white p-4 rounded-lg shadow-lg overflow-x-auto",
+  container: "bg-white p-4 rounded-lg shadow-lg overflow-x-auto relative",
   table: "w-full border-collapse",
   headerRow: "border-b-2 border-gray-200",
-  headerCell: "text-left p-3 font-semibold text-gray-700 bg-gray-50",
+  headerCell:
+    "text-left p-3 font-semibold text-gray-700 bg-gray-50 relative overflow-visible",
   sortableHeader:
     "cursor-pointer select-none hover:bg-gray-100 p-2 rounded flex items-center gap-2",
   nonSortableHeader: "p-2",
@@ -99,6 +119,10 @@ const tableStyles = {
     "cursor-help hover:bg-blue-50 transition-colors duration-200 relative group",
   tooltip:
     "absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10",
+  evalHeader: "relative group cursor-help",
+  evalTooltip:
+    "fixed px-3 py-2 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-normal max-w-xs z-50 text-center transform -translate-x-1/2",
+  helpIcon: "text-gray-400 text-xs ml-1",
 };
 
 // Create dynamic columns based on unique evaluations
@@ -134,7 +158,16 @@ const createDynamicColumns = (data: PivotedRow[]): ColumnDef<PivotedRow>[] => {
     .forEach((evalName) => {
       columns.push({
         accessorKey: evalName,
-        header: evalName,
+        header: () => (
+          <div class={tableStyles.evalHeader}>
+            <span>{evalName}</span>
+            <span class={tableStyles.helpIcon}>❓</span>
+            <div
+              class={tableStyles.evalTooltip}
+              innerHTML={getEvalExplanation(evalName)}
+            ></div>
+          </div>
+        ),
         accessorFn: (row) => {
           const value = row[evalName] as
             | { score: number; timestamp: Date }
@@ -189,7 +222,11 @@ export default function Home() {
   return (
     <main class="text-center mx-auto text-gray-700 p-4 max-w-6xl">
       <div class="mt-8">
-        <h2 class="text-2xl font-bold mb-4">Evaluation Results</h2>
+        <h2 class="text-2xl font-bold mb-4">Results</h2>
+        <p>
+          Hover over column titles for info on scores. All scores 0-1, 0 is
+          worst, 1 is best.
+        </p>
         <div class={tableStyles.container}>
           <Show
             when={(evalData()?.length ?? 0) > 0}

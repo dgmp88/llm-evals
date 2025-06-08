@@ -5,39 +5,48 @@ import numpy as np
 from easyAI import AI_Player, Negamax
 from easyAI.games.TicTacToe import TicTacToe as EAITicTacToe
 
-from evals.core import Assistant, Eval, User, batch_eval
+from evals.core import Assistant, Eval, InvalidResponseException, User, batch_eval
 from evals.registry import register_eval
 from evals.types import Message
 
-SYSTEM_PROMPT = """You are an expert TicTacToe player, and always make the perfect move. Respond only with a number between 1 and 9, where 1 is the top-left corner and 9 is the bottom-right corner. The game board is numbered as follows:
+SYSTEM_PROMPT = """You are an expert TicTacToe player, and always make the perfect move. Either 'X' or 'O' may go first.
+
+Respond only with a number between 1 and 9, where 1 is the top-left corner and 9 is the bottom-right corner. The game board positions are numbered as follows:
 
 1 2 3
 4 5 6
 7 8 9
-"""
+
+Respond ONLY with a number between 1 and 9. Do not respond with any new lines or other text."""
 
 
 MESSAGES: list[Message] = [
     {"role": "system", "content": SYSTEM_PROMPT},
     {
         "role": "user",
-        "content": """. . .
+        "content": """Game Board:
 . . .
-. . .""",
+. . .
+. . .
+'X' to play""",
     },
     {"role": "assistant", "content": "1"},
     {
         "role": "user",
-        "content": """O . .
+        "content": """Game Board:
+X . .
 . . .
-. . .""",
+. . .
+'O' to play""",
     },
     {"role": "assistant", "content": "5"},
     {
         "role": "user",
-        "content": """O X O
+        "content": """Game Board:
+O X O
 . X .
-. . O""",
+. . O
+'X' to play""",
     },
     {"role": "assistant", "content": "8"},
 ]
@@ -45,13 +54,17 @@ MESSAGES: list[Message] = [
 
 class TicTacToe(EAITicTacToe):
     def __str__(self):
-        string = "\n" + "\n".join(
+        board_str = "\n".join(
             [
                 " ".join([[".", "O", "X"][self.board[3 * j + i]] for i in range(3)])
                 for j in range(3)
             ]
         )
-        return string
+
+        # Determine whose turn it is (player 1 = O, player 2 = X)
+        current_player = "O" if self.current_player == 1 else "X"
+
+        return f"Game Board:\n{board_str}\n'{current_player}' to play:"
 
 
 @dataclass
@@ -72,27 +85,42 @@ class TicTacToeAssistant(Assistant):
 
     def post_respond(self, chat_history, response):
         # Update the game board
-        move = int(response.strip())
+        try:
+            move = int(
+                response.strip()
+            )  # Let a value error raise if the move is invalid
+
+            if move not in self.game.possible_moves():
+                raise InvalidResponseException(f"Invalid move: {move}")
+        except ValueError:
+            raise InvalidResponseException(f"Invalid move: {response}")
+
         self.game.play_move(move)
 
 
 class TicTacToeUser(User):
-    def __init__(self, rng: np.random.Generator, game: TicTacToe):
+    def __init__(self, rng: np.random.Generator, game: TicTacToe, llm_goes_first: bool):
         super().__init__()
         self.rng = rng
         self.game = game
+        self.llm_goes_first = llm_goes_first
 
     def respond(self, chat_history):
-        is_empty_first_move = len(chat_history) == 0 and self.rng.choice([True, False])
-        if is_empty_first_move:
-            print("LLM going first")
-            response = str(self.game)
-            self.game.switch_player()
+        # On the very first turn, check who should go first
+        if len(chat_history) == 0:
+            if self.llm_goes_first:
+                # LLM goes first, just return the empty board
+                return str(self.game)
+            else:
+                # LLM goes second, make a move then return board
+                move = self.game.get_move()
+                self.game.play_move(move)
+                return str(self.game)
         else:
+            # Normal turn: opponent makes move, then return board state
             move = self.game.get_move()
             self.game.play_move(move)
-            response = str(move) + "\n" + str(self.game)
-        return response
+            return str(self.game)
 
     def is_done(self):
         return self.game.is_over()
@@ -120,10 +148,23 @@ class TicTacToeEval(Eval):
             case _:
                 raise ValueError("Invalid opponent")
 
-        game = TicTacToe([opp, None])
+        # Decide who goes first at initialization
+        llm_goes_first = self.rng.choice([True, False])
+        if llm_goes_first:
+            # LLM is player 1 (X), opponent is player 2 (O)
+            game = TicTacToe([None, opp])
+            self.llm_goes_first = True
+        else:
+            # Opponent is player 1 (X), LLM is player 2 (O)
+            game = TicTacToe([opp, None])
+            self.llm_goes_first = False
+
         self.game = game
+
         self.assistant = TicTacToeAssistant(model=model, game=game)
-        self.user = TicTacToeUser(self.rng, game=game)
+        self.user = TicTacToeUser(
+            self.rng, game=game, llm_goes_first=self.llm_goes_first
+        )
 
     def evaluate(self):
         winner: int | None = None
@@ -136,11 +177,12 @@ class TicTacToeEval(Eval):
 
         if not winner:
             # It was a draw
-            return 0
+            return 0.5
 
         winning_player = self.game.players[winner - 1]
-        res = 1 if winning_player is None else -1
-        return res
+        # If winning_player is None, that means the LLM won (1.0)
+        # If winning_player is not None, that means the opponent won, so LLM lost (0.0)
+        return 1.0 if winning_player is None else 0.0
 
 
 def tic_tac_toe(model: str, opponent: OpponentType, runs: int = 10):

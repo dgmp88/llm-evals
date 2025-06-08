@@ -10,6 +10,14 @@ from evals.util.db import EvalResult
 from evals.util.llm import completion
 
 
+class InvalidResponseException(Exception):
+    """
+    Treated as losing in most cases
+    """
+
+    pass
+
+
 class Agent(ABC):
     role: Role
 
@@ -76,14 +84,20 @@ class Eval(ABC):
 
         response: None | str = None
 
-        for i in range(self.max_turns):
-            response = current.respond(self.chat_history)
-            self.chat_history.append(Message(role=current.role, content=response))
-            if current.is_done():
-                break
-            current = self.assistant if current == self.user else self.user
+        try:
+            for i in range(self.max_turns):
+                response = current.respond(self.chat_history)
+                self.chat_history.append(Message(role=current.role, content=response))
+                if current.is_done():
+                    break
+                current = self.assistant if current == self.user else self.user
 
-        score = self.evaluate()
+            score = self.evaluate()
+        except InvalidResponseException as e:
+            # Invalid responses are treated as failures (score = 0.0)
+            score = 0.0
+            print(f"Invalid response in {self.name}: {e}")
+
         self.print_chat()
         return score
 
@@ -249,45 +263,3 @@ def batch_eval(
         "eval_name": eval_name,
         "failed_runs": failed_runs,
     }
-
-
-def debug_eval(eval_factory: Callable[[int], Eval], seed: int = 0) -> dict:
-    """
-    Run a single evaluation for debugging purposes.
-
-    Args:
-        eval_factory: Factory function that creates Eval instances
-        seed: Random seed for reproducible debugging
-
-    Returns:
-        Dictionary containing debug information and results
-    """
-    print(f"=== DEBUG MODE (seed={seed}) ===")
-
-    try:
-        eval_instance = eval_factory(seed)
-        print(f"Eval: {eval_instance.name}")
-        print(f"Model: {eval_instance.assistant.model}")
-        print(f"Max turns: {eval_instance.max_turns}")
-        print("\n" + "=" * 50)
-
-        score = eval_instance.run()
-
-        print("\n" + "=" * 50)
-        print(f"Final Score: {score}")
-        print("=" * 50)
-
-        return {
-            "score": score,
-            "model_name": eval_instance.assistant.model,
-            "eval_name": eval_instance.name,
-            "chat_history": eval_instance.chat_history,
-            "seed": seed,
-        }
-
-    except Exception as e:
-        print(f"DEBUG EVAL FAILED: {str(e)}")
-        import traceback
-
-        traceback.print_exc()
-        return {"score": 0.0, "error": str(e), "seed": seed}

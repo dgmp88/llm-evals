@@ -2,14 +2,14 @@
 Unified CLI for running all evaluations.
 """
 
-from typing import List, Optional
+from typing import Optional
 
 from cyclopts import App
 
 # Import all evaluation modules to trigger registration
 import evals.math  # noqa: F401
 import evals.tictactoe  # noqa: F401
-from evals.core import batch_eval, debug_eval
+from evals.core import batch_eval
 from evals.registry import create_eval_factory, get_eval_config, get_eval_names
 
 app = App()
@@ -83,6 +83,7 @@ def run(
     print("-" * 50)
 
     all_results = {}
+    failed_combinations = []
 
     for eval_name in eval_list:
         config = get_eval_config(eval_name)
@@ -96,21 +97,46 @@ def run(
             # Create evaluation factory
             eval_factory = create_eval_factory(eval_name, model)
 
-            # Run batch evaluation
-            results = batch_eval(
-                num_runs=eval_runs,
-                eval_factory=eval_factory,
-                max_workers=max_workers,
-                save_results=save_results,
-                verbose=verbose,
-            )
+            try:
+                # Run batch evaluation
+                results = batch_eval(
+                    num_runs=eval_runs,
+                    eval_factory=eval_factory,
+                    max_workers=max_workers,
+                    save_results=save_results,
+                    verbose=verbose,
+                )
 
-            # Store results
-            if eval_name not in all_results:
-                all_results[eval_name] = {}
-            all_results[eval_name][model] = results
+                # Store results
+                if eval_name not in all_results:
+                    all_results[eval_name] = {}
+                all_results[eval_name][model] = results
 
-            print(f"✅ Completed {eval_name} with {model}")
+                print(f"✅ Completed {eval_name} with {model}")
+
+            except ValueError as e:
+                # Handle case where all evaluations failed for this model/eval combination
+                if "No evaluations completed successfully" in str(e):
+                    print(f"❌ All evaluations failed for {eval_name} with {model}")
+                    print(f"   Error: {str(e)}")
+                    failed_combinations.append((eval_name, model))
+
+                    # Store failure information
+                    if eval_name not in all_results:
+                        all_results[eval_name] = {}
+                    all_results[eval_name][model] = {"error": str(e), "failed": True}
+                else:
+                    # Re-raise other ValueError types
+                    raise
+            except Exception as e:
+                # Handle other unexpected errors
+                print(f"❌ Unexpected error for {eval_name} with {model}: {str(e)}")
+                failed_combinations.append((eval_name, model))
+
+                # Store failure information
+                if eval_name not in all_results:
+                    all_results[eval_name] = {}
+                all_results[eval_name][model] = {"error": str(e), "failed": True}
 
     print("\n" + "=" * 50)
     print("📊 SUMMARY OF ALL RESULTS")
@@ -119,8 +145,32 @@ def run(
     for eval_name in eval_list:
         print(f"\n{eval_name}:")
         for model in model_list:
-            results = all_results[eval_name][model]
-            print(f"  {model}: {results}")
+            if eval_name in all_results and model in all_results[eval_name]:
+                results = all_results[eval_name][model]
+                if isinstance(results, dict) and results.get("failed", False):
+                    print(
+                        f"  {model}: FAILED - {results.get('error', 'Unknown error')}"
+                    )
+                else:
+                    print(f"  {model}: {results}")
+            else:
+                print(f"  {model}: No results (skipped)")
+
+    # Report failed combinations at the end
+    if failed_combinations:
+        print("\n" + "⚠️" * 20)
+        print("❌ FAILED EVALUATIONS SUMMARY")
+        print("⚠️" * 20)
+        print(f"\n{len(failed_combinations)} evaluation(s) completely failed:")
+        for eval_name, model in failed_combinations:
+            print(f"  • {eval_name} with {model}")
+        print("\nConsider checking:")
+        print("  - Model availability and configuration")
+        print("  - Network connectivity")
+        print("  - API keys and authentication")
+        print("  - Evaluation parameters and requirements")
+    else:
+        print("\n✅ All evaluations completed successfully!")
 
     return all_results
 
@@ -154,9 +204,11 @@ def debug(
     eval_factory = create_eval_factory(eval_name, model)
 
     # Run debug evaluation
-    result = debug_eval(eval_factory, seed=seed)
 
-    return result
+    eval_instance = eval_factory(seed)
+    score = eval_instance.run()
+
+    print(f"Final Score: {score}")
 
 
 def main():
