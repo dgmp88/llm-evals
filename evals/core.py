@@ -28,10 +28,10 @@ TIMES = []
 class Assistant(Agent):
     role = "assistant"
 
-    def __init__(self, model: str, system_prompt: str):
+    def __init__(self, model: str, messages: list[Message]):
         super().__init__()
         self.model: str = model
-        self.system_message = Message(role="system", content=system_prompt)
+        self.messages = messages
 
     def pre_respond(self, chat_history: list[Message]):
         # Overloadable hook
@@ -43,7 +43,7 @@ class Assistant(Agent):
 
     def respond(self, chat_history: list[Message]):
         self.pre_respond(chat_history)
-        ch = [self.system_message] + chat_history
+        ch: list[Message] = self.messages + chat_history
         t1 = time.time()
         response = completion(self.model, ch)
         print(f"Time taken: {time.time() - t1:.2f}s")

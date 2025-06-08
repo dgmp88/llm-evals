@@ -7,31 +7,40 @@ from easyAI.games.TicTacToe import TicTacToe as EAITicTacToe
 
 from evals.core import Assistant, Eval, User, batch_eval
 from evals.registry import register_eval
+from evals.types import Message
 
 SYSTEM_PROMPT = """You are an expert TicTacToe player, and always make the perfect move. Respond only with a number between 1 and 9, where 1 is the top-left corner and 9 is the bottom-right corner. The game board is numbered as follows:
 
 1 2 3
 4 5 6
 7 8 9
+"""
 
-## Examples:
-User: -
+
+MESSAGES: list[Message] = [
+    {"role": "system", "content": SYSTEM_PROMPT},
+    {
+        "role": "user",
+        "content": """. . .
 . . .
+. . .""",
+    },
+    {"role": "assistant", "content": "1"},
+    {
+        "role": "user",
+        "content": """O . .
 . . .
-. . .
-Response: 1
-----
-User: 1
-O . .
-. . .
-. . .
-Response: 5
-----
-User: 2
-O X O
+. . .""",
+    },
+    {"role": "assistant", "content": "5"},
+    {
+        "role": "user",
+        "content": """O X O
 . X .
-. . O
-Response: 8"""
+. . O""",
+    },
+    {"role": "assistant", "content": "8"},
+]
 
 
 class TicTacToe(EAITicTacToe):
@@ -55,7 +64,7 @@ class RandomPlayer:
 
 class TicTacToeAssistant(Assistant):
     def __init__(self, model: str, game: TicTacToe):
-        super().__init__(model=model, system_prompt=SYSTEM_PROMPT)
+        super().__init__(model=model, messages=MESSAGES)
         self.game = game
 
     def is_done(self):

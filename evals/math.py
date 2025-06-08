@@ -4,30 +4,29 @@ import numpy as np
 
 from evals.core import Assistant, Eval, User, batch_eval
 from evals.registry import register_eval
+from evals.types import Message
 
-SYSTEM_PROMPT = """Answer the math problem with the numeric result only. Round to two decimal places if necessary. Do not add newlines, commas, or any other characters.
+SYSTEM_PROMPT = """Answer the math problem with the numeric result only. Round to two decimal places if necessary. Do not include newlines, commas, or any other characters in your response."""
 
-Examples: 
-
-User: 1 + 1 
-Assistant: 2
-----
-User: 234/2
-Assistant: 117
-----
-User: 10/2- 5
-Assistant: 0
-----
-User: 823 * 377 
-Assistant: 310271
-----
-User: 1/3
-Assistant: 0.33"""
+# Convert to  list of messages
+MESSAGES: list[Message] = [
+    {"role": "system", "content": SYSTEM_PROMPT},
+    {"role": "user", "content": "1 + 1"},
+    {"role": "assistant", "content": "2"},
+    {"role": "user", "content": "234/2"},
+    {"role": "assistant", "content": "117"},
+    {"role": "user", "content": "10/2 - 5"},
+    {"role": "assistant", "content": "0"},
+    {"role": "user", "content": "823 * 377"},
+    {"role": "assistant", "content": "310271"},
+    {"role": "user", "content": "1/3"},
+    {"role": "assistant", "content": "0.33"},
+]
 
 
 class MathAssistant(Assistant):
     def __init__(self, model: str):
-        super().__init__(model=model, system_prompt=SYSTEM_PROMPT)
+        super().__init__(model=model, messages=MESSAGES)
 
     def is_done(self):
         return True
