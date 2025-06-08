@@ -14,7 +14,8 @@ export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 export interface Evalresult {
   eval_name: string;
   id: Generated<number>;
-  model_name: string;
+  provider: string;
+  model: string;
   result: number;
   runs: number | null;
   timestamp: Timestamp;

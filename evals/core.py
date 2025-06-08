@@ -201,8 +201,18 @@ def batch_eval(
 
     # Save to database if requested
     if save_results and model_name and eval_name:
+        # Split the model name into provider and model parts
+        # Expected format: "provider/model" (e.g., "anthropic/claude-sonnet-4")
+        if "/" in model_name:
+            provider, model = model_name.split("/", 1)
+        else:
+            # Fallback if no provider specified
+            provider = "unknown"
+            model = model_name
+
         eval_result = EvalResult(
-            model_name=model_name,
+            provider=provider,
+            model=model,
             eval_name=eval_name,
             result=stats["mean"],
             runs=stats["successful_runs"],

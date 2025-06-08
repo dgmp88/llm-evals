@@ -13,13 +13,61 @@ import { createSignal, For, Show } from "solid-js";
 import type { Selectable } from "kysely";
 import type { Evalresult } from "~/lib/db.d";
 
+// Types for pivoted data
+interface PivotedRow {
+  model_display: string;
+  [evalName: string]: string | { score: number; timestamp: Date };
+}
+
 const getEvalData = query(async () => {
   "use server";
   try {
-    const results = await db.selectFrom("evalresult").selectAll().execute();
+    // Get all results first, then deduplicate in JavaScript to get the latest
+    const allResults = await db.selectFrom("evalresult").selectAll().execute();
 
-    console.log(results);
-    return results;
+    console.log("Raw results:", allResults);
+
+    // Group by provider/model and eval_name, keeping only the latest timestamp for each combination
+    const latestResults = new Map<string, Selectable<Evalresult>>();
+
+    allResults.forEach((result) => {
+      const modelDisplay = `${result.provider}/${result.model}`;
+      const key = `${modelDisplay}-${result.eval_name}`;
+      const existing = latestResults.get(key);
+
+      if (
+        !existing ||
+        new Date(result.timestamp) > new Date(existing.timestamp)
+      ) {
+        latestResults.set(key, result);
+      }
+    });
+
+    const results = Array.from(latestResults.values());
+
+    // Transform data into pivoted structure
+    const pivotedData: PivotedRow[] = [];
+    const modelMap = new Map<string, PivotedRow>();
+
+    // Group by model and create pivoted rows
+    results.forEach((result) => {
+      const modelDisplay = `${result.provider}/${result.model}`;
+      if (!modelMap.has(modelDisplay)) {
+        modelMap.set(modelDisplay, {
+          model_display: modelDisplay,
+        });
+      }
+
+      const row = modelMap.get(modelDisplay)!;
+      row[result.eval_name] = {
+        score: result.result,
+        timestamp: result.timestamp,
+      };
+    });
+
+    const finalData = Array.from(modelMap.values());
+    console.log("Pivoted data:", finalData);
+    return finalData;
   } catch (error) {
     console.error("Error fetching eval data:", error);
     return [];
@@ -29,7 +77,6 @@ const getEvalData = query(async () => {
 // Formatting utilities
 const formatScore = (score: number) => score.toFixed(4);
 const formatTimestamp = (date: Date) => new Date(date).toLocaleString();
-const formatRuns = (runs: number | null) => runs || "N/A";
 
 // CSS classes organization
 const tableStyles = {
@@ -42,60 +89,80 @@ const tableStyles = {
   nonSortableHeader: "p-2",
   sortIndicator: "text-xs",
   bodyRow: "border-b border-gray-100 hover:bg-gray-50",
-  bodyCell: "p-3 text-sm",
+  bodyCell: "p-3 text-sm relative",
   footer: "mt-4 text-sm text-gray-600 flex justify-between items-center",
   sortStatus: "text-xs",
   sortBadge: "ml-1 bg-blue-100 text-blue-800 px-2 py-1 rounded",
   emptyState: "text-gray-500 py-8",
+  scoreCell:
+    "cursor-help hover:bg-blue-50 transition-colors duration-200 relative group",
+  tooltip:
+    "absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10",
 };
 
-// Column definitions
-const createEvalColumns = (): ColumnDef<Selectable<Evalresult>>[] => [
-  {
-    accessorKey: "model_name",
-    header: "Model Name",
-    cell: (info) => info.getValue(),
-  },
-  {
-    accessorKey: "eval_name",
-    header: "Evaluation",
-    cell: (info) => info.getValue(),
-  },
-  {
-    accessorKey: "result",
-    header: "Score",
-    cell: (info) => {
-      const value = info.getValue() as number;
-      return formatScore(value);
+// Create dynamic columns based on unique evaluations
+const createDynamicColumns = (data: PivotedRow[]): ColumnDef<PivotedRow>[] => {
+  if (!data || data.length === 0) return [];
+
+  // Get all unique evaluation names
+  const evalNames = new Set<string>();
+  data.forEach((row) => {
+    Object.keys(row).forEach((key) => {
+      if (key !== "model_display") {
+        evalNames.add(key);
+      }
+    });
+  });
+
+  const columns: ColumnDef<PivotedRow>[] = [
+    {
+      accessorKey: "model_display",
+      header: "Model",
+      cell: (info) => info.getValue() as string,
     },
-  },
-  {
-    accessorKey: "runs",
-    header: "Runs",
-    cell: (info) => formatRuns(info.getValue() as number | null),
-  },
-  {
-    accessorKey: "timestamp",
-    header: "Timestamp",
-    cell: (info) => {
-      const value = info.getValue() as Date;
-      return formatTimestamp(value);
-    },
-  },
-];
+  ];
+
+  // Add a column for each evaluation
+  Array.from(evalNames)
+    .sort()
+    .forEach((evalName) => {
+      columns.push({
+        accessorKey: evalName,
+        header: evalName,
+        cell: (info) => {
+          const value = info.getValue() as
+            | { score: number; timestamp: Date }
+            | undefined;
+          if (!value) return "-";
+
+          return (
+            <div class={tableStyles.scoreCell}>
+              {formatScore(value.score)}
+              <div class={tableStyles.tooltip}>
+                {formatTimestamp(value.timestamp)}
+              </div>
+            </div>
+          );
+        },
+      });
+    });
+
+  return columns;
+};
 
 export default function Home() {
   const evalData = createAsync(() => getEvalData());
   const [sorting, setSorting] = createSignal<SortingState>([]);
-
-  const columns = createEvalColumns();
 
   const table = createSolidTable({
     get data() {
       const data = evalData();
       return data || [];
     },
-    columns,
+    get columns() {
+      const data = evalData();
+      return createDynamicColumns(data || []);
+    },
     state: {
       get sorting() {
         return sorting();
@@ -176,7 +243,7 @@ export default function Home() {
               </tbody>
             </table>
             <div class={tableStyles.footer}>
-              <span>{table.getRowModel().rows.length} Results</span>
+              <span>{table.getRowModel().rows.length} Models</span>
               <Show when={sorting().length > 0}>
                 <div class={tableStyles.sortStatus}>
                   <span class="font-medium">Sorted by:</span>
