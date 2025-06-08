@@ -1,9 +1,8 @@
-import { A } from "@solidjs/router";
 import { createAsync } from "@solidjs/router";
-import { action, cache } from "@solidjs/router";
+import { query } from "@solidjs/router";
 import { db } from "~/lib/db";
 
-const getEvalData = cache(async () => {
+const getEvalData = query(async () => {
   "use server";
   try {
     const results = await db.selectFrom("evalresult").selectAll().execute();
