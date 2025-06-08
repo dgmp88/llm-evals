@@ -135,8 +135,14 @@ const createDynamicColumns = (data: PivotedRow[]): ColumnDef<PivotedRow>[] => {
       columns.push({
         accessorKey: evalName,
         header: evalName,
+        accessorFn: (row) => {
+          const value = row[evalName] as
+            | { score: number; timestamp: Date }
+            | undefined;
+          return value?.score; // Return just the score for sorting, undefined for missing values
+        },
         cell: (info) => {
-          const value = info.getValue() as
+          const value = info.row.original[evalName] as
             | { score: number; timestamp: Date }
             | undefined;
           if (!value) return "-";
@@ -150,6 +156,7 @@ const createDynamicColumns = (data: PivotedRow[]): ColumnDef<PivotedRow>[] => {
             </div>
           );
         },
+        sortUndefined: "last",
       });
     });
 
