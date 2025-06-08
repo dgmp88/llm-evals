@@ -1,6 +1,7 @@
 import { createAsync } from "@solidjs/router";
 import { query } from "@solidjs/router";
 import { db } from "~/lib/db";
+import { sql } from "kysely";
 import {
   flexRender,
   getCoreRowModel,
@@ -24,21 +25,13 @@ const getEvalData = query(async () => {
     // Use Kysely to get the latest result for each provider/model/eval combination
     // This is more efficient than fetching all and deduplicating in JS
     const results = await db
-      .selectFrom("evalresult as e1")
+      .selectFrom("evalresult")
+      .distinctOn(["provider", "model", "eval_name"])
       .selectAll()
-      .where((eb) =>
-        eb.not(
-          eb.exists(
-            eb
-              .selectFrom("evalresult as e2")
-              .select("id")
-              .where("e2.provider", "=", eb.ref("e1.provider"))
-              .where("e2.model", "=", eb.ref("e1.model"))
-              .where("e2.eval_name", "=", eb.ref("e1.eval_name"))
-              .where("e2.timestamp", ">", eb.ref("e1.timestamp")),
-          ),
-        ),
-      )
+      .orderBy("provider")
+      .orderBy("model")
+      .orderBy("eval_name")
+      .orderBy(sql`"timestamp"`, "desc")
       .execute();
 
     console.log("Latest results:", results);
