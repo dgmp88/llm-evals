@@ -79,6 +79,24 @@ const getEvalData = query(async () => {
 const formatScore = (score: number) => score.toFixed(4);
 const formatTimestamp = (date: Date) => new Date(date).toLocaleString();
 
+// Function to calculate background color based on score (0-1 range)
+const getScoreBackgroundColor = (score: number): string => {
+  // Clamp score between 0 and 1
+  const clampedScore = Math.max(0, Math.min(1, score));
+
+  if (clampedScore <= 0.5) {
+    // From red (0) to transparent (0.5)
+    const intensity = (0.5 - clampedScore) / 0.5; // 1 at score=0, 0 at score=0.5
+    const opacity = Math.round(intensity * 50); // Max 50% opacity
+    return `rgba(239, 68, 68, ${opacity / 100})`; // red-500 with calculated opacity
+  } else {
+    // From transparent (0.5) to green (1)
+    const intensity = (clampedScore - 0.5) / 0.5; // 0 at score=0.5, 1 at score=1
+    const opacity = Math.round(intensity * 50); // Max 50% opacity
+    return `rgba(34, 197, 94, ${opacity / 100})`; // green-500 with calculated opacity
+  }
+};
+
 // Evaluation explanations mapping
 const evalExplanations: Record<string, string> = {
   math_eval:
@@ -181,7 +199,12 @@ const createDynamicColumns = (data: PivotedRow[]): ColumnDef<PivotedRow>[] => {
           if (!value) return "-";
 
           return (
-            <div class={tableStyles.scoreCell}>
+            <div
+              class={tableStyles.scoreCell}
+              style={{
+                "background-color": getScoreBackgroundColor(value.score),
+              }}
+            >
               {formatScore(value.score)}
               <div class={tableStyles.tooltip}>
                 {formatTimestamp(value.timestamp)}
