@@ -10,64 +10,59 @@ import {
   createSolidTable,
 } from "@tanstack/solid-table";
 import { createSignal, For, Show } from "solid-js";
-import type { Selectable } from "kysely";
-import type { Evalresult } from "~/lib/db.d";
 
-// Types for pivoted data
-interface PivotedRow {
+// Simple interface for model rows with dynamic eval scores
+interface ModelRow {
   provider: string;
   model: string;
-  [evalName: string]: string | { score: number; timestamp: Date };
+  [evalName: string]: string | number | Date | undefined;
 }
 
 const getEvalData = query(async () => {
   "use server";
   try {
-    // Get all results first, then deduplicate in JavaScript to get the latest
-    const allResults = await db.selectFrom("evalresult").selectAll().execute();
+    // Use Kysely to get the latest result for each provider/model/eval combination
+    // This is more efficient than fetching all and deduplicating in JS
+    const results = await db
+      .selectFrom("evalresult as e1")
+      .selectAll()
+      .where((eb) =>
+        eb.not(
+          eb.exists(
+            eb
+              .selectFrom("evalresult as e2")
+              .select("id")
+              .where("e2.provider", "=", eb.ref("e1.provider"))
+              .where("e2.model", "=", eb.ref("e1.model"))
+              .where("e2.eval_name", "=", eb.ref("e1.eval_name"))
+              .where("e2.timestamp", ">", eb.ref("e1.timestamp")),
+          ),
+        ),
+      )
+      .execute();
 
-    console.log("Raw results:", allResults);
+    console.log("Latest results:", results);
 
-    // Group by provider/model and eval_name, keeping only the latest timestamp for each combination
-    const latestResults = new Map<string, Selectable<Evalresult>>();
+    // Group results by model and create rows
+    const modelRows = new Map<string, ModelRow>();
 
-    allResults.forEach((result) => {
-      const key = `${result.provider}/${result.model}-${result.eval_name}`;
-      const existing = latestResults.get(key);
-
-      if (
-        !existing ||
-        new Date(result.timestamp) > new Date(existing.timestamp)
-      ) {
-        latestResults.set(key, result);
-      }
-    });
-
-    const results = Array.from(latestResults.values());
-
-    // Transform data into pivoted structure
-    const pivotedData: PivotedRow[] = [];
-    const modelMap = new Map<string, PivotedRow>();
-
-    // Group by model and create pivoted rows
     results.forEach((result) => {
       const modelKey = `${result.provider}/${result.model}`;
-      if (!modelMap.has(modelKey)) {
-        modelMap.set(modelKey, {
+
+      if (!modelRows.has(modelKey)) {
+        modelRows.set(modelKey, {
           provider: result.provider,
           model: result.model,
         });
       }
 
-      const row = modelMap.get(modelKey)!;
-      row[result.eval_name] = {
-        score: result.result,
-        timestamp: result.timestamp,
-      };
+      const row = modelRows.get(modelKey)!;
+      row[result.eval_name] = result.result;
+      row[`${result.eval_name}_timestamp`] = result.timestamp;
     });
 
-    const finalData = Array.from(modelMap.values());
-    console.log("Pivoted data:", finalData);
+    const finalData = Array.from(modelRows.values());
+    console.log("Model rows:", finalData);
     return finalData;
   } catch (error) {
     console.error("Error fetching eval data:", error);
@@ -144,20 +139,24 @@ const tableStyles = {
 };
 
 // Create dynamic columns based on unique evaluations
-const createDynamicColumns = (data: PivotedRow[]): ColumnDef<PivotedRow>[] => {
+const createDynamicColumns = (data: ModelRow[]): ColumnDef<ModelRow>[] => {
   if (!data || data.length === 0) return [];
 
   // Get all unique evaluation names
   const evalNames = new Set<string>();
   data.forEach((row) => {
     Object.keys(row).forEach((key) => {
-      if (key !== "provider" && key !== "model") {
+      if (
+        key !== "provider" &&
+        key !== "model" &&
+        !key.endsWith("_timestamp")
+      ) {
         evalNames.add(key);
       }
     });
   });
 
-  const columns: ColumnDef<PivotedRow>[] = [
+  const columns: ColumnDef<ModelRow>[] = [
     {
       accessorKey: "provider",
       header: "Provider",
@@ -186,28 +185,25 @@ const createDynamicColumns = (data: PivotedRow[]): ColumnDef<PivotedRow>[] => {
             ></div>
           </div>
         ),
-        accessorFn: (row) => {
-          const value = row[evalName] as
-            | { score: number; timestamp: Date }
-            | undefined;
-          return value?.score; // Return just the score for sorting, undefined for missing values
-        },
+        accessorFn: (row) => row[evalName] as number | undefined,
         cell: (info) => {
-          const value = info.row.original[evalName] as
-            | { score: number; timestamp: Date }
+          const score = info.getValue() as number | undefined;
+          const timestamp = info.row.original[`${evalName}_timestamp`] as
+            | Date
             | undefined;
-          if (!value) return "-";
+
+          if (score === undefined) return "-";
 
           return (
             <div
               class={tableStyles.scoreCell}
               style={{
-                "background-color": getScoreBackgroundColor(value.score),
+                "background-color": getScoreBackgroundColor(score),
               }}
             >
-              {formatScore(value.score)}
+              {formatScore(score)}
               <div class={tableStyles.tooltip}>
-                {formatTimestamp(value.timestamp)}
+                {timestamp ? formatTimestamp(timestamp) : "No timestamp"}
               </div>
             </div>
           );
