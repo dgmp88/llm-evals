@@ -4,16 +4,21 @@
   "scripts": {
     "dev": "vinxi dev",
     "build": "vinxi build",
-    "start": "vinxi start"
+    "start": "vinxi start",
+    "db-types": "kysely-codegen --out-file ./src/lib/db.d.ts"
   },
   "dependencies": {
     "@solidjs/router": "^0.15.0",
     "@solidjs/start": "^1.1.0",
+    "kysely": "^0.28.2",
+    "pg": "^8.12.0",
     "solid-js": "^1.9.5",
     "vinxi": "^0.5.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.7",
+    "@types/pg": "^8.11.10",
+    "kysely-codegen": "^0.18.5",
     "tailwindcss": "^4.0.7"
   },
   "engines": {
