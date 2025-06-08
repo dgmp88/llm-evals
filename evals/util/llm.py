@@ -46,6 +46,7 @@ def completion(model: str, messages: List[Message]) -> str:
                 },
             }
         ),
+        timeout=20,
     )
 
     result = response.json()

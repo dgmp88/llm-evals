@@ -76,7 +76,7 @@ const getEvalData = query(async () => {
 }, "eval-data");
 
 // Formatting utilities
-const formatScore = (score: number) => score.toFixed(4);
+const formatScore = (score: number) => score.toFixed(2);
 const formatTimestamp = (date: Date) => new Date(date).toLocaleString();
 
 // Function to calculate background color based on score (0-1 range)
