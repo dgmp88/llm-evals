@@ -42,7 +42,7 @@ class MathUser(OpponentPlayer):
         operation = rng.choice(["+", "-", "*", "/"])
         self.problem = f"{x} {operation} {y}"
 
-    def respond(self, chat_history):
+    def make_move(self, chat_history):
         return self.problem
 
     def is_done(self):

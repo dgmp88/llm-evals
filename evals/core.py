@@ -22,7 +22,7 @@ class Player(ABC):
     role: PlayerRole
 
     @abstractmethod
-    def respond(self, chat_history: list[Message]) -> str:
+    def make_move(self, chat_history: list[Message]) -> str:
         pass
 
     @abstractmethod
@@ -41,18 +41,19 @@ class LLMPlayer(Player):
         self.model: str = model
         self.messages = messages
 
-    def post_respond(self, chat_history: list[Message], response: str):
+    def process_completion(self, chat_history: list[Message], response: str):
         # Overloadable hook
         pass
 
-    def respond(self, chat_history: list[Message]):
+    def make_move(self, chat_history: list[Message]):
+        # 1. Build messages and make the completiion
         ch: list[Message] = self.messages + chat_history
         t1 = time.time()
         response = completion(self.model, ch)
         print(f"Time taken: {time.time() - t1:.2f}s")
         TIMES.append(time.time() - t1)
         print(f"avg time: {np.mean(TIMES)}, max time: {np.max(TIMES)}")
-        self.post_respond(chat_history, response)
+        self.process_completion(chat_history, response)
         return response
 
 
@@ -81,7 +82,7 @@ class Eval(ABC):
 
         try:
             for i in range(self.max_turns):
-                response = current.respond(self.chat_history)
+                response = current.make_move(self.chat_history)
                 self.chat_history.append(
                     Message(role=PlayerRoleMap[current.role], content=response)
                 )

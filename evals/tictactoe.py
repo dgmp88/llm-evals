@@ -89,7 +89,7 @@ class TicTacToeLLMPlayer(LLMPlayer):
     def is_done(self):
         return self.game.is_over()
 
-    def post_respond(self, chat_history, response):
+    def process_completion(self, chat_history, response):
         # Update the game board
         try:
             move = int(
@@ -111,7 +111,7 @@ class TicTacToeOpponentPlayer(OpponentPlayer):
         self.game = game
         self.llm_goes_first = llm_goes_first
 
-    def respond(self, chat_history):
+    def make_move(self, chat_history):
         # On the very first turn, check who should go first
         if len(chat_history) == 0:
             if self.llm_goes_first:
