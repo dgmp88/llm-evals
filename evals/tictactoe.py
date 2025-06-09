@@ -5,7 +5,13 @@ import numpy as np
 from easyAI import AI_Player, Negamax
 from easyAI.games.TicTacToe import TicTacToe as EAITicTacToe
 
-from evals.core import Assistant, Eval, InvalidResponseException, User, batch_eval
+from evals.core import (
+    Eval,
+    InvalidResponseException,
+    LLMPlayer,
+    OpponentPlayer,
+    batch_eval,
+)
 from evals.registry import register_eval
 from evals.types import Message
 
@@ -75,7 +81,7 @@ class RandomPlayer:
         return self.rng.choice(game.possible_moves())
 
 
-class TicTacToeAssistant(Assistant):
+class TicTacToeLLMPlayer(LLMPlayer):
     def __init__(self, model: str, game: TicTacToe):
         super().__init__(model=model, messages=MESSAGES)
         self.game = game
@@ -98,7 +104,7 @@ class TicTacToeAssistant(Assistant):
         self.game.play_move(move)
 
 
-class TicTacToeUser(User):
+class TicTacToeOpponentPlayer(OpponentPlayer):
     def __init__(self, rng: np.random.Generator, game: TicTacToe, llm_goes_first: bool):
         super().__init__()
         self.rng = rng
@@ -161,8 +167,8 @@ class TicTacToeEval(Eval):
 
         self.game = game
 
-        self.assistant = TicTacToeAssistant(model=model, game=game)
-        self.user = TicTacToeUser(
+        self.assistant = TicTacToeLLMPlayer(model=model, game=game)
+        self.user = TicTacToeOpponentPlayer(
             self.rng, game=game, llm_goes_first=self.llm_goes_first
         )
 

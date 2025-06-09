@@ -2,7 +2,7 @@ from typing import cast
 
 import numpy as np
 
-from evals.core import Assistant, Eval, User, batch_eval
+from evals.core import Eval, LLMPlayer, OpponentPlayer, batch_eval
 from evals.registry import register_eval
 from evals.types import Message
 
@@ -24,7 +24,7 @@ MESSAGES: list[Message] = [
 ]
 
 
-class MathAssistant(Assistant):
+class MathAssistant(LLMPlayer):
     def __init__(self, model: str):
         super().__init__(model=model, messages=MESSAGES)
 
@@ -32,7 +32,7 @@ class MathAssistant(Assistant):
         return True
 
 
-class MathUser(User):
+class MathUser(OpponentPlayer):
     def __init__(self, rng: np.random.Generator, low: int = 100, high: int = 1000):
         super().__init__()
         self.low = low

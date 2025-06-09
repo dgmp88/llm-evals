@@ -5,7 +5,7 @@ from typing import Callable
 import numpy as np
 from tqdm import tqdm
 
-from evals.types import Message, Role
+from evals.types import Message, PlayerRole, PlayerRoleMap
 from evals.util.db import EvalResult
 from evals.util.llm import completion
 
@@ -18,8 +18,8 @@ class InvalidResponseException(Exception):
     pass
 
 
-class Agent(ABC):
-    role: Role
+class Player(ABC):
+    role: PlayerRole
 
     @abstractmethod
     def respond(self, chat_history: list[Message]) -> str:
@@ -33,24 +33,19 @@ class Agent(ABC):
 TIMES = []
 
 
-class Assistant(Agent):
-    role = "assistant"
+class LLMPlayer(Player):
+    role = "llm"
 
     def __init__(self, model: str, messages: list[Message]):
         super().__init__()
         self.model: str = model
         self.messages = messages
 
-    def pre_respond(self, chat_history: list[Message]):
-        # Overloadable hook
-        pass
-
     def post_respond(self, chat_history: list[Message], response: str):
         # Overloadable hook
         pass
 
     def respond(self, chat_history: list[Message]):
-        self.pre_respond(chat_history)
         ch: list[Message] = self.messages + chat_history
         t1 = time.time()
         response = completion(self.model, ch)
@@ -61,14 +56,14 @@ class Assistant(Agent):
         return response
 
 
-class User(Agent):
-    role = "user"
+class OpponentPlayer(Player):
+    role = "opponent"
 
 
 class Eval(ABC):
     name: str
-    assistant: Assistant
-    user: User
+    assistant: LLMPlayer
+    user: OpponentPlayer
     max_turns: int = 10
 
     def __init__(
@@ -87,7 +82,9 @@ class Eval(ABC):
         try:
             for i in range(self.max_turns):
                 response = current.respond(self.chat_history)
-                self.chat_history.append(Message(role=current.role, content=response))
+                self.chat_history.append(
+                    Message(role=PlayerRoleMap[current.role], content=response)
+                )
                 if current.is_done():
                     break
                 current = self.assistant if current == self.user else self.user
