@@ -29,26 +29,28 @@ def get_client() -> OpenAI:
 
 
 def completion(model: str, messages: List[Message]) -> str:
+    payload = {
+        "model": model,
+        "messages": messages,
+        "max_tokens": DEFAULT_MAX_TOKENS,
+        "temperature": DEFAULT_TEMPERATURE,
+        "reasoning": {
+            "exclude": True,
+            "max_tokens": DEFAULT_MAX_REASONING_TOKENS,
+        },
+    }
+
     response = requests.post(
         url="https://openrouter.ai/api/v1/chat/completions",
         headers={
             "Authorization": f"Bearer {ENV.OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
         },
-        data=json.dumps(
-            {
-                "model": model,
-                "messages": messages,
-                "max_tokens": DEFAULT_MAX_TOKENS,
-                "temperature": DEFAULT_TEMPERATURE,
-                "reasoning": {
-                    "exclude": True,
-                    "max_tokens": DEFAULT_MAX_REASONING_TOKENS,
-                },
-            }
-        ),
+        json=payload,
         timeout=20,
     )
 
+    response.raise_for_status()
     result = response.json()
 
     choice = result["choices"][0]
